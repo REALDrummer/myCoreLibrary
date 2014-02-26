@@ -1,0 +1,21 @@
+name: myCoreLibrary
+main: REALDrummer.myCoreLibrary
+version: 0
+description: >
+             This is like the Minecraft Bukkit developer's Library of Congress.
+commands:
+   myCoreLibrary:
+      aliases: [mCL]
+      description: This command lets admins save and load the configurations and toggle the auto-updater.
+      usage: |
+           /<command> ("load"/"save"/"update") ("on"/"off")
+   id:
+      aliases: [ids]
+      description: This command outputs the item name and I.D. that coordinate with the item name or I.D. given.
+      usage: |
+           /<command> [item I.D. or name]
+   recipe:
+      aliases: [craft]
+      description: This command outputs the crafting recipe for the item given (by I.D. or by name).
+      usage: |
+           /<command> [item I.D. or name]
