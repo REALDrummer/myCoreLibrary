@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @SuppressWarnings("unchecked")
-public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
-    public int length = 0;
-    public myListNode<T> root = null;
+public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, Cloneable {
+    private int length = 0;
+    private myListNode<T> root = null;
 
     public myList(T... objects) {
         add(objects);
@@ -27,6 +27,10 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
         return add((T[]) objects.toArray());
     }
 
+    private void balance() {
+        
+    }
+    
     public void clear() {
 
     }
@@ -40,7 +44,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
     }
 
     public boolean[] contains(Collection<T> objects) {
-
+        return contains((T[]) objects.toArray());
     }
 
     public boolean[] contains(myList<T> objects) {
@@ -52,7 +56,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
     }
 
     public boolean containsAND(Collection<T> objects) {
-
+        return containsAND((T[]) objects.toArray());
     }
 
     public boolean containsAND(myList<T> objects) {
@@ -64,7 +68,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
     }
 
     public boolean containsOR(Collection<T> objects) {
-
+        return containsOR((T[]) objects.toArray());
     }
 
     public boolean containsOR(myList<T> objects) {
@@ -80,7 +84,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
     }
 
     public int[] find(Collection<T> objects) {
-
+        return find((T[]) objects.toArray());
     }
 
     public int[] find(myList<T> objects) {
@@ -111,8 +115,20 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
         return find(objects);
     }
 
-    public int has(int index) {
+    public int indexOf(T object) {
+        return find(object);
+    }
 
+    public int[] indicesOf(T... objects) {
+        return find(objects);
+    }
+
+    public int[] indicesOf(Collection<T> objects) {
+        return find(objects);
+    }
+
+    public int[] indicesOf(myList<T> objects) {
+        return find(objects);
     }
 
     public myList<T> intersect(T... list) {
@@ -129,6 +145,38 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
 
     public boolean isEmpty() {
         return length == 0;
+    }
+
+    public myListIterator<T> iterator() {
+        
+    }
+    
+    public int lastIndexOf(T object) {
+
+    }
+
+    public int[] lastIndicesOf(T... objects) {
+
+    }
+
+    public int[] lastIndicesOf(Collection<T> objects) {
+        return lastIndicesOf((T[]) objects.toArray());
+    }
+
+    public int[] lastIndicesOf(myList<T> objects) {
+
+    }
+
+    public int length() {
+        return length;
+    }
+
+    public myList<T> sublist(int begin_index) {
+
+    }
+
+    public myList<T> sublist(int begin_index, int end_index) {
+
     }
 
     public void remove(int index) {
@@ -173,6 +221,10 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
 
     }
 
+    public int[] removeRepeats() {
+
+    }
+
     public void retainAll(T... objects) {
 
     }
@@ -185,8 +237,32 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
 
     }
 
+    public int size() {
+        return length;
+    }
+
     public int search(T object) {
         return find(object);
+    }
+
+    public myList<T>[] split(int... indices) {
+
+    }
+
+    public myList<T>[] split(T object) {
+
+    }
+
+    public myList<T>[] split(T... objects) {
+
+    }
+
+    public myList<T>[] split(Collection<T> objects) {
+
+    }
+
+    public myList<T>[] split(myList<T> objects) {
+
     }
 
     public T[] toArray() {
@@ -210,6 +286,11 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
     }
 
     @Override
+    public myList<T> clone() {
+
+    }
+
+    @Override
     public int compareTo(myList<T> list) {
         if (isEmpty() && list.isEmpty())
             return 0;
@@ -217,8 +298,8 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
             return -1;
         else if (list.isEmpty())
             return 1;
-        else
-            return get(0).compareTo(list.get(0));
+        
+        
     }
 
     @Override
@@ -228,6 +309,6 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>> {
 
     @Override
     public String toString() {
-
+        
     }
 }
