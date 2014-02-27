@@ -5,10 +5,16 @@ import java.util.Collection;
 
 @SuppressWarnings("unchecked")
 public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, Cloneable {
-    private int length = 0;
-    private myListNode<T> root = null;
+    private T data;
+    private byte number_of;
+    private myList<T> left, right;
 
-    public myList(T... objects) {
+    public myList(T data, T... objects) {
+        this.data = data;
+        number_of = 1;
+        left = null;
+        right = null;
+
         add(objects);
     }
 
@@ -27,10 +33,14 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
         return add((T[]) objects.toArray());
     }
 
-    private void balance() {
-        
+    public int[] add(myList<T> objects) {
+
     }
     
+    public void balance() {
+        
+    }
+
     public void clear() {
 
     }
@@ -148,9 +158,9 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public myListIterator<T> iterator() {
-        
+
     }
-    
+
     public int lastIndexOf(T object) {
 
     }
@@ -168,7 +178,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public int length() {
-        return length;
+        return size();
     }
 
     public myList<T> sublist(int begin_index) {
@@ -238,7 +248,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public int size() {
-        return length;
+        return 1 + (left != null ? left.size() : 0) + (right != null ? right.size() : 0);
     }
 
     public int search(T object) {
@@ -278,7 +288,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public myList<T> union(Collection<T> list) {
-
+        return union((T[]) list.toArray());
     }
 
     public myList<T> union(myList<T> list) {
@@ -298,8 +308,8 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
             return -1;
         else if (list.isEmpty())
             return 1;
-        
-        
+
+        // TODO
     }
 
     @Override
@@ -309,6 +319,6 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
 
     @Override
     public String toString() {
-        
+
     }
 }
