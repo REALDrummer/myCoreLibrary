@@ -2,8 +2,9 @@ package REALDrummer;
 
 import java.util.ArrayList;
 
-// Array Utilities
-public class AU {
+import static REALDrummer.MessageUtilities.err;
+
+public class ArrayUtilities {
     public static <T> ArrayList<T> arrayToArrayList(T[] array) {
         ArrayList<T> array_list = new ArrayList<T>();
         for (T object : array)
@@ -36,7 +37,7 @@ public class AU {
             try {
                 combination += strings[i];
             } catch (ArrayIndexOutOfBoundsException e) {
-                MU.err(mCL.mCL, "Someone gave me bad indices!", e);
+                err(myCoreLibrary.mCL, "Someone gave me bad indices!", e);
             }
             if (i < end_index - 1)
                 combination += separator;

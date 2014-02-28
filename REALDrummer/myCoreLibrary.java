@@ -13,8 +13,6 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
-
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -30,7 +28,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class mCL extends JavaPlugin {
+import static REALDrummer.ColorUtilities.colorCode;
+import static REALDrummer.MessageUtilities.tellOps;
+import static REALDrummer.MessageUtilities.err;
+import static REALDrummer.StringUtilities.readResponse;
+import static REALDrummer.WikiUtilities.getItemIdAndData;
+import static REALDrummer.WikiUtilities.getItemName;
+import static REALDrummer.WikiUtilities.getRecipe;
+
+public class myCoreLibrary extends JavaPlugin {
     public static final ChatColor COLOR = ChatColor.DARK_PURPLE;
 
     public static Plugin mCL;
@@ -52,7 +58,7 @@ public class mCL extends JavaPlugin {
         String[] enable_messages =
                 { "I'm like the Minecraft-opedia!", "I have info galore! I even have info about my info! Info is coming out of my .classes!",
                         "The Minecraft Library of Congress has got nothing on me." };
-        MU.tellOps(COLOR + enable_messages[(int) (Math.random() * enable_messages.length)], true);
+        tellOps(COLOR + enable_messages[(int) (Math.random() * enable_messages.length)], true);
     }
 
     @Override
@@ -62,7 +68,7 @@ public class mCL extends JavaPlugin {
         String[] disable_messages =
                 { "I hope you returned all your files, because we're closing the library for the day!", "This information kiosk is now closed.",
                         "All right. All done with work. Time to go home and read the Minecraft dictionary!" };
-        MU.tellOps(COLOR + disable_messages[(int) (Math.random() * disable_messages.length)], true);
+        tellOps(COLOR + disable_messages[(int) (Math.random() * disable_messages.length)], true);
     }
 
     @Override
@@ -71,7 +77,7 @@ public class mCL extends JavaPlugin {
             id(sender, parameters);
             return true;
         } else if (command.equalsIgnoreCase("recipe") || command.equalsIgnoreCase("craft")) {
-            getRecipe(sender, parameters);
+            recipe(sender, parameters);
             return true;
         } else if ((command.equalsIgnoreCase("myPluginWiki") || command.equalsIgnoreCase("mPW")) && parameters.length >= 1 && parameters[0].toLowerCase().startsWith("update")) {
             if (sender instanceof Player && !sender.isOp())
@@ -160,7 +166,7 @@ public class mCL extends JavaPlugin {
                     break;
                 save_line = save_line.trim();
                 if (save_line.startsWith("Do you want myPluginWiki to check for updates every time it is enabled?"))
-                    auto_update = SU.readResponse(save_line.substring(71), in.readLine(), "Right now, myPluginWiki will auto-update.");
+                    auto_update = readResponse(save_line.substring(71), in.readLine(), "Right now, myPluginWiki will auto-update.");
                 save_line = in.readLine();
             }
             in.close();
@@ -255,13 +261,13 @@ public class mCL extends JavaPlugin {
                     }
                 }
             } catch (XMLStreamException exception) {
-                MU.err(mCL, "I'm afraid that we have encountered a knowledge-hating XMLStreamException.", exception);
+                err(mCL, "I'm afraid that we have encountered a knowledge-hating XMLStreamException.", exception);
                 return;
             }
             boolean new_version_is_out = false;
             String version = getDescription().getVersion(), newest_online_version = "";
             if (new_version_name == null) {
-                MU.tellOps(ChatColor.DARK_RED + "Something seems to have gone awry while trying to retrieve the newest version of ", true);
+                tellOps(ChatColor.DARK_RED + "Something seems to have gone awry while trying to retrieve the newest version of ", true);
                 return;
             }
             if (new_version_name.split("v").length == 2) {
@@ -308,7 +314,7 @@ public class mCL extends JavaPlugin {
                             int count;
                             while ((count = in.read(data, 0, 1024)) != -1)
                                 fout.write(data, 0, count);
-                            MU.tellOps(COLOR + "" + ChatColor.UNDERLINE + "The myPluginWiki library has increased its stores! It's now at v" + newest_online_version
+                            tellOps(COLOR + "" + ChatColor.UNDERLINE + "The myPluginWiki library has increased its stores! It's now at v" + newest_online_version
                                     + ". Please replace your old myPluginWiki with the new one in your data folder and we'll increase our stores of information!", true);
                         } catch (Exception ex) {
                             sender.sendMessage(ChatColor.DARK_RED + "Oh, no! It seems myPluginWiki v" + newest_online_version
@@ -332,7 +338,7 @@ public class mCL extends JavaPlugin {
         }
     }
 
-    private void getRecipe(CommandSender sender, String[] parameters) {
+    private void recipe(CommandSender sender, String[] parameters) {
         // TODO: make no parameters return the recipe of what the sender is holding or pointing at
 
         // assemble the query
@@ -352,23 +358,23 @@ public class mCL extends JavaPlugin {
                 } catch (NumberFormatException exception2) {
                     id = -1;
                     data = -1;
-                    Integer[] temp = WU.getItemIdAndData(query, true);
+                    Integer[] temp = getItemIdAndData(query, true);
                     if (temp[0] != null) {
                         id = temp[0];
                         data = temp[1];
                     }
                 }
             } else {
-                Integer[] temp = WU.getItemIdAndData(query, true);
+                Integer[] temp = getItemIdAndData(query, true);
                 if (temp[0] != null) {
                     id = temp[0];
                     data = temp[1];
                 }
             }
         }
-        String recipe = WU.getRecipe(id, data), item_name = WU.getItemName(id, data, false, false, true);
+        String recipe = getRecipe(id, data), item_name = getItemName(id, data, false, false, true);
         if (recipe != null)
-            sender.sendMessage(SU.colorCode(recipe));
+            sender.sendMessage(colorCode(recipe));
         else if (item_name != null)
             sender.sendMessage(COLOR + "You can't craft " + item_name + "!");
         else if (query.toLowerCase().startsWith("a") || query.toLowerCase().startsWith("e") || query.toLowerCase().startsWith("i") || query.toLowerCase().startsWith("o")
@@ -383,7 +389,7 @@ public class mCL extends JavaPlugin {
             if (sender instanceof Player) {
                 Player player = (Player) sender;
                 Block block = player.getTargetBlock(null, 1024);
-                String block_name = WU.getItemName(block, false, true, true), id_and_data = String.valueOf(block.getTypeId());
+                String block_name = getItemName(block, false, true, true), id_and_data = String.valueOf(block.getTypeId());
                 if (block.getData() > 0)
                     id_and_data += ":" + block.getData();
                 // send the message
@@ -393,7 +399,7 @@ public class mCL extends JavaPlugin {
                     player.sendMessage(ChatColor.RED + "Uh...what in the world " + ChatColor.ITALIC + "is" + ChatColor.RED + " that thing you're pointing at?");
                     player.sendMessage(ChatColor.RED + "Well, whatever it is, it has the I.D. " + id_and_data + ".");
                 }
-                String item_name = WU.getItemName(player.getItemInHand(), false, player.getItemInHand().getAmount() <= 1, true);
+                String item_name = getItemName(player.getItemInHand(), false, player.getItemInHand().getAmount() <= 1, true);
                 id_and_data = String.valueOf(player.getItemInHand().getTypeId());
                 if (player.getItemInHand().getData().getData() > 0)
                     id_and_data += ":" + player.getItemInHand().getData().getData();
@@ -422,11 +428,11 @@ public class mCL extends JavaPlugin {
             // for simple I.D. queries
             try {
                 int id = Integer.parseInt(query);
-                String item_name = WU.getItemName(id, -1, false, false, true);
+                String item_name = getItemName(id, -1, false, false, true);
                 if (item_name != null)
                     // if the singular form uses the "some" artcile or the item name ends in "s" but not "ss" (like "wooden planks", but not like
                     // "grass"), the item name is a true plural
-                    if (!WU.getItemName(id, -1, false, true, false).startsWith("some ") || (item_name.endsWith("s") && !item_name.endsWith("ss")))
+                    if (!getItemName(id, -1, false, true, false).startsWith("some ") || (item_name.endsWith("s") && !item_name.endsWith("ss")))
                         sender.sendMessage(COLOR + item_name.substring(0, 1).toUpperCase() + item_name.substring(1) + " have the I.D. " + id + ".");
                     else
                         sender.sendMessage(COLOR + item_name.substring(0, 1).toUpperCase() + item_name.substring(1) + " has the I.D. " + id + ".");
@@ -438,12 +444,12 @@ public class mCL extends JavaPlugin {
                     if (temp.length == 2) {
                         // for "[id]:[data]" queries
                         int id = Integer.parseInt(temp[0]), data = Integer.parseInt(temp[1]);
-                        String item_name = WU.getItemName(id, data, false, false, true);
+                        String item_name = getItemName(id, data, false, false, true);
                         // send the message
                         if (item_name != null)
                             // if the singular form uses the "some" artcile or the item name ends in "s" but not "ss" (like "wooden planks", but not like
                             // "grass"), the item name is a true plural
-                            if (!WU.getItemName(id, data, false, true, false).startsWith("some ") || (item_name.endsWith("s") && !item_name.endsWith("ss")))
+                            if (!getItemName(id, data, false, true, false).startsWith("some ") || (item_name.endsWith("s") && !item_name.endsWith("ss")))
                                 sender.sendMessage(COLOR + item_name.substring(0, 1).toUpperCase() + item_name.substring(1) + " have the I.D. " + query + ".");
                             else
                                 sender.sendMessage(COLOR + item_name.substring(0, 1).toUpperCase() + item_name.substring(1) + " has the I.D. " + query + ".");
@@ -451,7 +457,7 @@ public class mCL extends JavaPlugin {
                             sender.sendMessage(ChatColor.RED + "No item has the I.D. " + query + ".");
                     } else {
                         // for word queries
-                        Integer[] id_and_data = WU.getItemIdAndData(query, null);
+                        Integer[] id_and_data = getItemIdAndData(query, null);
                         if (id_and_data == null) {
                             if (query.toLowerCase().startsWith("a") || query.toLowerCase().startsWith("e") || query.toLowerCase().startsWith("i")
                                     || query.toLowerCase().startsWith("o") || query.toLowerCase().startsWith("u"))
@@ -463,18 +469,18 @@ public class mCL extends JavaPlugin {
                         // this part seems odd because it seems like it's a long roundabout way to get item_name. You might think: isn't item_name the same as
                         // query? Wrong. A query can (and probably is) just a few letters from the name of the item. By finding the id, then using that to get
                         // the name, it's an effective autocompletion of the item name.
-                        String item_name = WU.getItemName(id_and_data[0], id_and_data[1], false, false, true), id_and_data_term = String.valueOf(id_and_data[0]);
+                        String item_name = getItemName(id_and_data[0], id_and_data[1], false, false, true), id_and_data_term = String.valueOf(id_and_data[0]);
                         if (id_and_data[1] > 0)
                             id_and_data_term += ":" + id_and_data[1];
                         // if it found it, send the message
-                        if (!WU.getItemName(id_and_data[0], id_and_data[1], false, true, false).startsWith("some ") || (item_name.endsWith("s") && !item_name.endsWith("ss")))
+                        if (!getItemName(id_and_data[0], id_and_data[1], false, true, false).startsWith("some ") || (item_name.endsWith("s") && !item_name.endsWith("ss")))
                             sender.sendMessage(COLOR + item_name.substring(0, 1).toUpperCase() + item_name.substring(1) + " have the I.D. " + id_and_data_term + ".");
                         else
                             sender.sendMessage(COLOR + item_name.substring(0, 1).toUpperCase() + item_name.substring(1) + " has the I.D. " + id_and_data_term + ".");
                     }
                 } catch (NumberFormatException e) {
                     // for word queries
-                    Integer[] id_and_data = WU.getItemIdAndData(query, null);
+                    Integer[] id_and_data = getItemIdAndData(query, null);
                     if (id_and_data == null) {
                         if (query.toLowerCase().startsWith("a") || query.toLowerCase().startsWith("e") || query.toLowerCase().startsWith("i")
                                 || query.toLowerCase().startsWith("o") || query.toLowerCase().startsWith("u"))
@@ -486,11 +492,11 @@ public class mCL extends JavaPlugin {
                     // this part seems odd because it seems like it's a long roundabout way to get item_name. You might think: isn't item_name the same as
                     // query? Wrong. A query can (and probably is) just a few letters from the name of the item. By finding the id, then using that to get
                     // the name, it's an effective autocompletion of the item name.
-                    String item_name = WU.getItemName(id_and_data[0], id_and_data[1], false, false, true), id_and_data_term = String.valueOf(id_and_data[0]);
+                    String item_name = getItemName(id_and_data[0], id_and_data[1], false, false, true), id_and_data_term = String.valueOf(id_and_data[0]);
                     if (id_and_data[1] > 0)
                         id_and_data_term += ":" + id_and_data[1];
                     // if it found it, send the message
-                    if (!WU.getItemName(id_and_data[0], id_and_data[1], false, true, false).startsWith("some ") || (item_name.endsWith("s") && !item_name.endsWith("ss")))
+                    if (!getItemName(id_and_data[0], id_and_data[1], false, true, false).startsWith("some ") || (item_name.endsWith("s") && !item_name.endsWith("ss")))
                         sender.sendMessage(COLOR + item_name.substring(0, 1).toUpperCase() + item_name.substring(1) + " have the I.D. " + id_and_data_term + ".");
                     else
                         sender.sendMessage(COLOR + item_name.substring(0, 1).toUpperCase() + item_name.substring(1) + " has the I.D. " + id_and_data_term + ".");

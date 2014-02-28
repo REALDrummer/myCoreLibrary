@@ -5,8 +5,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-// Message Utilities
-public class MU {
+import static REALDrummer.ArrayUtilities.contains;
+import static REALDrummer.ColorUtilities.colorCode;
+
+public class MessageUtilities {
     public static void confirmDisable(ChatColor color, String... disable_messages) {
         tellOps(color + disable_messages[(int) (Math.random() * disable_messages.length)], true);
     }
@@ -154,10 +156,10 @@ public class MU {
      * @param exempt_ops
      *            is an optional parameter in which you may list any ops by exact username that should not receive <b><tt>message</b></tt>. */
     public static void tellOps(String message, boolean also_tell_console, String... exempt_ops) {
-        for (Player player : mCL.server.getOnlinePlayers())
-            if (player.isOp() && !AU.contains(exempt_ops, player.getName()))
-                player.sendMessage(CU.colorCode(message));
+        for (Player player : myCoreLibrary.server.getOnlinePlayers())
+            if (player.isOp() && !contains(exempt_ops, player.getName()))
+                player.sendMessage(colorCode(message));
         if (also_tell_console)
-            mCL.console.sendMessage(CU.colorCode(message));
+            myCoreLibrary.console.sendMessage(colorCode(message));
     }
 }

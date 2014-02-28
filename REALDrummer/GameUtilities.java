@@ -12,9 +12,10 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-// Game Utilities
-public class GU {
-    
+import static REALDrummer.ArrayUtilities.contains;
+
+public class GameUtilities {
+
     public static int calcTotalXp(int level) {
         // from the Minecraft Wiki (where x is the level and the result is the amount of total experience required to reach level x):
         // "for x≤16: 17x
@@ -119,13 +120,13 @@ public class GU {
      * @return the completed username that begins with <b><tt>name</b></tt> (<i>not</i> case-sensitive) */
     public static String getFullName(String name) {
         String full_name = null;
-        for (Player possible_owner : mCL.server.getOnlinePlayers())
+        for (Player possible_owner : myCoreLibrary.server.getOnlinePlayers())
             // if this player's name also matches and it shorter, return it instead becuase if someone is using an autocompleted command, we need to make sure
             // to get the shortest name because if they meant to use the longer username, they can remedy this by adding more letters to the parameter; however,
             // if they meant to do a shorter username and the auto-complete finds the longer one first, they're screwed
             if (possible_owner.getName().toLowerCase().startsWith(name.toLowerCase()) && (full_name == null || full_name.length() > possible_owner.getName().length()))
                 full_name = possible_owner.getName();
-        for (OfflinePlayer possible_owner : mCL.server.getOfflinePlayers())
+        for (OfflinePlayer possible_owner : myCoreLibrary.server.getOfflinePlayers())
             if (possible_owner.getName().toLowerCase().startsWith(name.toLowerCase()) && (full_name == null || full_name.length() > possible_owner.getName().length()))
                 full_name = possible_owner.getName();
         return full_name;
@@ -133,7 +134,7 @@ public class GU {
 
     public static Player getPlayer(String name) {
         Player target = null;
-        for (Player player : mCL.server.getOnlinePlayers())
+        for (Player player : myCoreLibrary.server.getOnlinePlayers())
             if (player.getName().toLowerCase().startsWith(name.toLowerCase()) && (target == null || target.getName().length() > player.getName().length()))
                 target = player;
         return target;
@@ -171,12 +172,12 @@ public class GU {
             // make sure the location isn't outside the bounds of the world
             if (block == null || Math.abs(location.getBlockX()) >= 2000000 || Math.abs(location.getBlockZ()) >= 2000000 || location.getY() < 0
                     || location.getY() > location.getWorld().getMaxHeight()) {
-                mCL.debug("No good target found; search ended at " + SU.writeLocation(location, true, true));
+                myCoreLibrary.debug("No good target found; search ended at " + SU.writeLocation(location, true, true));
                 return null;
             }
             // make sure the location is either not a non-solid block or, if we're not skipping switches, a switch
-            if (!AU.contains(Wiki.NON_SOLID_BLOCK_IDS, (short) block.getTypeId())) {
-                mCL.debug("found target block at " + SU.writeLocation(block.getLocation(), true, true));
+            if (!contains(Wiki.NON_SOLID_BLOCK_IDS, (short) block.getTypeId())) {
+                myCoreLibrary.debug("found target block at " + SU.writeLocation(block.getLocation(), true, true));
                 return block;
             }
         }

@@ -3,19 +3,26 @@ package REALDrummer;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static REALDrummer.ArrayUtilities.writeArrayList;
+
 @SuppressWarnings("unchecked")
 public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, Cloneable {
     private T data;
     private byte number_of;
-    private myList<T> left, right;
+    private myList<T> left, right, root;
 
     public myList(T data, T... objects) {
         this.data = data;
         number_of = 1;
         left = null;
         right = null;
+        root = null;
 
         add(objects);
+    }
+
+    private void balance() {
+
     }
 
     public int add(T object) {
@@ -35,10 +42,6 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
 
     public int[] add(myList<T> objects) {
 
-    }
-    
-    public void balance() {
-        
     }
 
     public void clear() {
@@ -85,6 +88,10 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
 
     }
 
+    public void delete() {
+        free();
+    }
+
     public int find(T object) {
 
     }
@@ -99,6 +106,28 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
 
     public int[] find(myList<T> objects) {
 
+    }
+
+    public void free() {
+        // free the left and the right of this list first
+        if (left != null)
+            left.free();
+        if (right != null)
+            right.free();
+
+        // also remove the root's pointer that points to this node
+        if (root != null)
+            if (compareTo(root) < 0)
+                root.left = null;
+            else
+                root.right = null;
+
+        // finally, set everything to null/0 and leave the garbage collector to finish up
+        data = null;
+        number_of = 0;
+        left = null;
+        right = null;
+        root = null;
     }
 
     public T get(int index) {
@@ -125,6 +154,26 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
         return find(objects);
     }
 
+    public boolean hasLeft() {
+        return left != null;
+    }
+
+    public boolean hasNext() {
+        return next() != null;
+    }
+
+    public boolean hasPrevious() {
+        return previous() != null;
+    }
+
+    public boolean hasRight() {
+        return right != null;
+    }
+
+    public boolean hasRoot() {
+        return root != null;
+    }
+
     public int indexOf(T object) {
         return find(object);
     }
@@ -146,7 +195,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public myList<T> intersect(Collection<T> list) {
-
+        return intersect((T[]) list.toArray());
     }
 
     public myList<T> intersect(myList<T> list) {
@@ -154,7 +203,15 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public boolean isEmpty() {
-        return length == 0;
+        return data == null && left == null && right == null;
+    }
+
+    public boolean isFull() {
+        return isLeaf() || (left != null && right != null && left.isFull() && right.isFull());
+    }
+
+    public boolean isLeaf() {
+        return left == null && right == null;
     }
 
     public myListIterator<T> iterator() {
@@ -177,8 +234,20 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
 
     }
 
+    public myList<T> left() {
+        return left;
+    }
+
     public int length() {
         return size();
+    }
+
+    public myList<T> next() {
+
+    }
+
+    public myList<T> previous() {
+
     }
 
     public myList<T> sublist(int begin_index) {
@@ -235,16 +304,28 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
 
     }
 
-    public void retainAll(T... objects) {
+    public int retain(T object) {
 
     }
 
-    public void retainAll(Collection<T> objects) {
+    public int retain(T... objects) {
 
     }
 
-    public void retainAll(myList<T> objects) {
+    public int retain(Collection<T> objects) {
+        return retain((T[]) objects.toArray());
+    }
 
+    public int retain(myList<T> objects) {
+
+    }
+
+    public myList<T> right() {
+        return right;
+    }
+
+    public myList<T> root() {
+        return root;
     }
 
     public int size() {
@@ -268,7 +349,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public myList<T>[] split(Collection<T> objects) {
-
+        return split((T[]) objects.toArray());
     }
 
     public myList<T>[] split(myList<T> objects) {
@@ -280,7 +361,26 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public ArrayList<T> toArrayList() {
+        // if the list is empty, return an empty ArrayList
+        if (isEmpty())
+            return new ArrayList<T>();
 
+        // start here
+        myList<T> list = this;
+
+        // find the first SEQUENTIAL node, which will be at the far far left
+        while (list.hasLeft())
+            list = list.left;
+
+        // add the elements of the list to a new ArrayList sequentially
+        ArrayList<T> to_return = new ArrayList<T>();
+        while (list != null) {
+            to_return.add(list.data);
+            list = list.next();
+        }
+
+        // return the completed ArrayList
+        return to_return;
     }
 
     public myList<T> union(T... list) {
@@ -297,7 +397,12 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
 
     @Override
     public myList<T> clone() {
-
+        myList<T> list = new myList<T>(data);
+        list.number_of = number_of;
+        list.left = left;
+        list.right = right;
+        list.root = root;
+        return list;
     }
 
     @Override
@@ -314,11 +419,30 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
 
     @Override
     public boolean equals(Object object) {
-
+        return object instanceof myList<?> && ((myList<T>) object).compareTo(this) == 0;
     }
 
     @Override
     public String toString() {
+        // if the list is empty, return an empty String
+        if (isEmpty())
+            return "";
 
+        // start here
+        myList<T> list = this;
+
+        // find the first SEQUENTIAL node, which will be at the far far left
+        while (list.hasLeft())
+            list = list.left;
+
+        // add the elements of the list to a new ArrayList of toString()s sequentially
+        ArrayList<String> to_return = new ArrayList<String>();
+        while (list != null) {
+            to_return.add(list.data.toString());
+            list = list.next();
+        }
+
+        // return the completed ArrayList formatted into a list with items separated by line breaks
+        return writeArrayList(to_return, "\n");
     }
 }

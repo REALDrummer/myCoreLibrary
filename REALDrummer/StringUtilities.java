@@ -9,8 +9,11 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 
-// String Utilities
-public class SU {
+import static REALDrummer.MessageUtilities.tellOps;
+import static REALDrummer.ArrayUtilities.combine;
+import static REALDrummer.ArrayUtilities.writeArray;
+
+public class StringUtilities {
     public static final String[] BORDERS = { "[]", "\\/", "\"*", "_^", "-=", ":;", "&%", "#@", ",.", "<>", "~$", ")(", "+-", "|o" };
 
     public static String border() {
@@ -34,18 +37,18 @@ public class SU {
     }
 
     public static HashMap<String, String> readData(String save_line, String format) {
-        mCL.debug("reading data; save line=\"" + save_line + "\"; format=\"" + format + "\"");
+        myCoreLibrary.debug("reading data; save line=\"" + save_line + "\"; format=\"" + format + "\"");
 
         // HashMap<input name from format, value for that input from save_line>
         HashMap<String, String> data = new HashMap<String, String>();
         while (format.contains("[") || format.contains("]")) {
-            mCL.debug("reading next input...");
+            myCoreLibrary.debug("reading next input...");
 
             /* start by cutting off everything before the next input in the format and removing the same number of characters from the beginning of the save line. This puts
              * the next input point right at the beginning of both the format and save_line Strings */
             save_line = save_line.substring(format.indexOf('['));
             format = format.substring(format.indexOf('['));
-            mCL.debug("removed precedent from Strings: format=\"" + format + "\"; save line=\"" + save_line + "\"");
+            myCoreLibrary.debug("removed precedent from Strings: format=\"" + format + "\"; save line=\"" + save_line + "\"");
 
             // next, isolate the String between the current input that we're analyzing (the one at the beginning of both Strings) and the next input
             String successor;
@@ -53,16 +56,17 @@ public class SU {
                 successor = format.substring(format.indexOf(']') + 1, format.substring(1).indexOf('['));
             else
                 successor = format.substring(format.indexOf(']') + 1);
-            mCL.debug("successor = \"" + successor + "\"");
+            myCoreLibrary.debug("successor = \"" + successor + "\"");
 
             // now use the successor obtained to find the end of the input in the save line and put it in the data HashMap
             data.put(format.substring(1, format.indexOf(']')), save_line.substring(0, save_line.indexOf(successor)));
-            mCL.debug("data read: variable name=\"" + format.substring(1, format.indexOf(']')) + "\"; data=\"" + save_line.substring(0, save_line.indexOf(successor)) + "\"");
+            myCoreLibrary.debug("data read: variable name=\"" + format.substring(1, format.indexOf(']')) + "\"; data=\""
+                    + save_line.substring(0, save_line.indexOf(successor)) + "\"");
 
             // finally, remove the input data from format and save_line now that we're done reading it
             format = format.substring(format.indexOf(successor));
             save_line = save_line.substring(format.indexOf(successor));
-            mCL.debug("data input removed: format=\"" + format + "\"; save line=\"" + save_line + "\"");
+            myCoreLibrary.debug("data input removed: format=\"" + format + "\"; save line=\"" + save_line + "\"");
         }
 
         // return the data obtained
@@ -79,13 +83,12 @@ public class SU {
                 pitch = Float.parseFloat(tempS.split(", ")[0]);
                 yaw = Float.parseFloat(tempS.split(", ")[1]);
             }
-            World world = mCL.server.getWorld(string.substring(string.indexOf("\""), string.length() - 1));
+            World world = myCoreLibrary.server.getWorld(string.substring(string.indexOf("\""), string.length() - 1));
             if (world == null) {
                 if (display_errors) {
-                    MU.tellOps(ChatColor.DARK_RED + "I couldn't read the world name on this location String!", true);
-                    MU.tellOps(ChatColor.DARK_RED + "location: \"" + ChatColor.WHITE + string + ChatColor.DARK_RED + "\"", true);
-                    MU.tellOps(ChatColor.DARK_RED + "I read \"" + ChatColor.WHITE + string.substring(string.indexOf("\"")) + ChatColor.DARK_RED + "\" as the world name!",
-                            true);
+                    tellOps(ChatColor.DARK_RED + "I couldn't read the world name on this location String!", true);
+                    tellOps(ChatColor.DARK_RED + "location: \"" + ChatColor.WHITE + string + ChatColor.DARK_RED + "\"", true);
+                    tellOps(ChatColor.DARK_RED + "I read \"" + ChatColor.WHITE + string.substring(string.indexOf("\"")) + ChatColor.DARK_RED + "\" as the world name!", true);
                 }
                 return null;
             }
@@ -93,8 +96,8 @@ public class SU {
                     yaw, pitch);
         } catch (NumberFormatException exception) {
             if (display_errors) {
-                MU.tellOps(ChatColor.DARK_RED + "I couldn't read this location message properly!", true);
-                MU.tellOps(ChatColor.DARK_RED + "location: \"" + ChatColor.WHITE + string + ChatColor.DARK_RED + "\"", true);
+                tellOps(ChatColor.DARK_RED + "I couldn't read this location message properly!", true);
+                tellOps(ChatColor.DARK_RED + "location: \"" + ChatColor.WHITE + string + ChatColor.DARK_RED + "\"", true);
             }
             return null;
         }
@@ -121,7 +124,7 @@ public class SU {
         if (format.endsWith("\n"))
             format = format.substring(0, format.length() - 1);
 
-        mCL.debug("reading parameters; parameters=\"" + AU.combine(parameters, " ") + "\"; format=\"" + format + "\"");
+        myCoreLibrary.debug("reading parameters; parameters=\"" + combine(parameters, " ") + "\"; format=\"" + format + "\"");
 
         // interpret the index values if any were given
         byte start = 0, end = (byte) parameters.length;
@@ -150,12 +153,12 @@ public class SU {
                 options = format_parts[j].split(",");
             else if (format_parts[j].contains("/"))
                 options = format_parts[j].split("/");
-            mCL.debug(options.length + " option(s) found...");
+            myCoreLibrary.debug(options.length + " option(s) found...");
 
             boolean fits = false;
             // first, see if the current parameter fits the current format part; skip to the next format part if the current format part is optional and doesn't fit
             for (String option : options) {
-                mCL.debug("testing option " + option + "...");
+                myCoreLibrary.debug("testing option " + option + "...");
 
                 // determine the starting and terminating Strings needed if it's a specific parameter; default to "" because .startsWith("") >> true
                 String required_starter = "", required_terminator = "";
@@ -165,18 +168,18 @@ public class SU {
                     if (option.toCharArray()[option.length() - 2] == '"')
                         required_terminator = option.substring(option.substring(0, option.lastIndexOf('"')).lastIndexOf('"') + 1, option.length() - 2);
                 }
-                mCL.debug("required starter=\"" + required_starter + "\"; required terminator=\"" + required_terminator + "\"");
+                myCoreLibrary.debug("required starter=\"" + required_starter + "\"; required terminator=\"" + required_terminator + "\"");
 
                 boolean specific = required_starter.length() != 0 && (!required_starter.equals(required_terminator) || option.split("\"").length > 3);
 
                 String option_name =
                         option.substring(1 + (specific && required_starter.length() > 0 ? 2 + required_starter.length() : 0), option.length() - 1
                                 - (specific && required_terminator.length() > 0 ? 2 + required_terminator.length() : 0));
-                mCL.debug("option name=\"" + option_name + "\"");
+                myCoreLibrary.debug("option name=\"" + option_name + "\"");
 
                 // see if the current parameter fits this option's requirements
                 if (parameters[i].startsWith(required_starter) && parameters[i].endsWith(required_terminator)) {
-                    mCL.debug("match identified: \"" + parameters[i] + "\" instance of " + option);
+                    myCoreLibrary.debug("match identified: \"" + parameters[i] + "\" instance of " + option);
                     data.put(option_name, parameters[i].substring(specific ? required_starter.length() : 0, parameters[i].length()
                             - (specific ? required_terminator.length() : 0)));
                     fits = true;
@@ -184,10 +187,10 @@ public class SU {
                     // begin parsing this variable if it is a parsing parameter
                     if (option_name.endsWith("...")) {
                         parsing = option_name;
-                        mCL.debug("parsing parameter; parsing " + option_name);
+                        myCoreLibrary.debug("parsing parameter; parsing " + option_name);
                     } // if it is not a parsing parameter, make any current parsing stop
                     else if (parsing != null) {
-                        mCL.debug("stopping parsing " + parsing + "...");
+                        myCoreLibrary.debug("stopping parsing " + parsing + "...");
                         parsing = null;
                     }
 
@@ -203,19 +206,19 @@ public class SU {
                 // if the current parameter did not fit the current format part, add the current parameter to the end of the current parsing variable if there is one
                 if (parsing != null) {
                     data.put(parsing, data.get(parsing) + " " + parameters[i]);
-                    mCL.debug("added parameter to current parsing: " + parsing + "=\"" + data.get(parsing) + "\"");
+                    myCoreLibrary.debug("added parameter to current parsing: " + parsing + "=\"" + data.get(parsing) + "\"");
                     i++;
                 } else if (format_parts[j].startsWith("(") && !(j == format_parts.length - 1 && format_parts[j].contains(","))) {
-                    mCL.debug("no match, but parameter is optional; skipping to next format part...");
+                    myCoreLibrary.debug("no match, but parameter is optional; skipping to next format part...");
                     j++;
                 } else {
-                    mCL.debug("WARNING: unrecognized parameter \"" + parameters[i] + "\"; ignoring...");
+                    myCoreLibrary.debug("WARNING: unrecognized parameter \"" + parameters[i] + "\"; ignoring...");
                     i++;
                 }
         }
 
         for (String key : data.keySet())
-            mCL.debug("\"" + key + "\" >> \"" + data.get(key) + "\"");
+            myCoreLibrary.debug("\"" + key + "\" >> \"" + data.get(key) + "\"");
         return data;
     }
 
@@ -415,7 +418,7 @@ public class SU {
     }
 
     public static String writeData(String format, String... inputs) {
-        mCL.debug("writing data; format=\"" + format + "\"; inputs=" + AU.writeArray(inputs));
+        myCoreLibrary.debug("writing data; format=\"" + format + "\"; inputs=" + writeArray(inputs));
 
         // progress will be used to ensure that no text contained in "[]"s from intersted data will be replaced like the input points
         int i = 0, progress = 0;
@@ -434,10 +437,10 @@ public class SU {
 
         // generate debug warnings if any indicators of issues are present
         if (i < inputs.length - 1)
-            mCL.debug(ChatColor.RED + "WARNING: " + (inputs.length - 1 - i) + " inputs were not used");
+            myCoreLibrary.debug(ChatColor.RED + "WARNING: " + (inputs.length - 1 - i) + " inputs were not used");
         if (format.contains("[") && format.contains("]"))
-            mCL.debug(ChatColor.RED + "WARNING: data may contain unused input points");
-        mCL.debug("data=\"" + format + "\"");
+            myCoreLibrary.debug(ChatColor.RED + "WARNING: data may contain unused input points");
+        myCoreLibrary.debug("data=\"" + format + "\"");
 
         return format;
     }

@@ -15,6 +15,10 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import static REALDrummer.ColorUtilities.colorCode;
+import static REALDrummer.MessageUtilities.tellOps;
+import static REALDrummer.StringUtilities.readResponse;
+
 public class Question implements Listener, ActionListener {
     public static ArrayList<Question> questions = new ArrayList<Question>();
     public static ArrayList<Requestable> responders = new ArrayList<Requestable>();
@@ -72,20 +76,20 @@ public class Question implements Listener, ActionListener {
 
     public void ask(boolean relog) {
         // start the reminder/cancellation timer for this question if responder and player are available
-        Player target = mCL.server.getPlayerExact(player);
+        Player target = myCoreLibrary.server.getPlayerExact(player);
         if (responder != null && target != null) {
-            mCL.debug("responder and player found; asking question...");
-            target.sendMessage(SU.colorCode(relog ? relog_reminder : initial_question));
+            myCoreLibrary.debug("responder and player found; asking question...");
+            target.sendMessage(colorCode(relog ? relog_reminder : initial_question));
             if (timer != null && timer.isRunning())
                 timer.stop();
             timer = new Timer(15000, this);
             timer.start();
         } else if (responder == null && target == null)
-            mCL.debug("neither responder " + responder + " nor player " + player + " found; postponing question...");
+            myCoreLibrary.debug("neither responder " + responder + " nor player " + player + " found; postponing question...");
         else if (target == null)
-            mCL.debug(player + " not found; postponing question...");
+            myCoreLibrary.debug(player + " not found; postponing question...");
         else
-            mCL.debug(responder + " not found; postponing question...");
+            myCoreLibrary.debug(responder + " not found; postponing question...");
     }
 
     // list searchers
@@ -104,9 +108,9 @@ public class Question implements Listener, ActionListener {
     @Override
     public void actionPerformed(ActionEvent event) {
         // try to find the player to ask
-        Player target = mCL.server.getPlayerExact(player);
+        Player target = myCoreLibrary.server.getPlayerExact(player);
         if (target == null) {
-            mCL.debug(player + " not found for reminder " + time_counter + " questioning; postponing question...");
+            myCoreLibrary.debug(player + " not found for reminder " + time_counter + " questioning; postponing question...");
             timer.stop();
             time_counter = 0;
             return;
@@ -121,7 +125,7 @@ public class Question implements Listener, ActionListener {
     @EventHandler(priority = EventPriority.LOWEST)
     public static void listenForAnswers(AsyncPlayerChatEvent event) {
         // see if the message is an answer to a question
-        Boolean answer = SU.readResponse(event.getMessage());
+        Boolean answer = readResponse(event.getMessage());
         if (answer == null)
             return;
 
@@ -138,7 +142,7 @@ public class Question implements Listener, ActionListener {
                 break;
             }
         if (requestable == null) {
-            MU.tellOps(ChatColor.DARK_RED + "I couldn't find the Requestable to return this answer to!\nThe Requestable's name is \"" + question.responder
+            tellOps(ChatColor.DARK_RED + "I couldn't find the Requestable to return this answer to!\nThe Requestable's name is \"" + question.responder
                     + "\" and the question was \"" + question.initial_question + "\" (" + question.question_ID + ").", true);
             return;
         }

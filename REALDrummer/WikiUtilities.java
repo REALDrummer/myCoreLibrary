@@ -12,8 +12,13 @@ import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 
-// Wiki Utilities
-public class WU {
+import static REALDrummer.ArrayUtilities.combine;
+import static REALDrummer.ArrayUtilities.contains;
+import static REALDrummer.MessageUtilities.err;
+import static REALDrummer.MessageUtilities.tellOps;
+import static REALDrummer.StringUtilities.writeRomanNumeral;
+
+public class WikiUtilities {
     /** This method will tell whether or not a certain block will break if water or lava flows to it. No data value is required as input for this method because items with the
      * same I.D. consistently have this property in common.
      * 
@@ -70,7 +75,7 @@ public class WU {
     public static String getEnchantmentFullName(Enchantment enchantment, int level) {
         String name = getEnchantmentName(enchantment);
         if (level > 1 || (level == 1 && enchantment.getMaxLevel() > 1))
-            name += " " + SU.writeRomanNumeral(level);
+            name += " " + writeRomanNumeral(level);
         return name;
     }
 
@@ -113,15 +118,15 @@ public class WU {
                         // try reading it as "something with the I.D. [id]:[data]"
                         String[] id_and_data = enchantment_name[4].split(":");
                         if (id_and_data.length != 2) {
-                            MU.tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
-                                    + AU.combine(enchantment_name, " ") + ChatColor.DARK_RED + "\"", true);
+                            tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
+                                    + combine(enchantment_name, " ") + ChatColor.DARK_RED + "\"", true);
                             return null;
                         }
                         result_id = Integer.parseInt(id_and_data[0]);
                         return result_id;
                     } catch (NumberFormatException e2) {
-                        MU.err(mCL.mCL, "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
-                                + AU.combine(enchantment_name, " ") + ChatColor.DARK_RED + "\"", e2);
+                        err(myCoreLibrary.mCL, "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
+                                + combine(enchantment_name, " ") + ChatColor.DARK_RED + "\"", e2);
                         return null;
                     }
                 }
@@ -229,16 +234,16 @@ public class WU {
                         // try reading it as "something with the I.D. [id]:[data]"
                         String[] id_and_data = entity_name[4].split(":");
                         if (id_and_data.length != 2) {
-                            MU.tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + "\""
-                                    + AU.combine(entity_name, " ") + ChatColor.DARK_RED + "\".", true);
+                            tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + "\""
+                                    + combine(entity_name, " ") + ChatColor.DARK_RED + "\".", true);
                             return null;
                         }
                         result_id = Integer.parseInt(id_and_data[0]);
                         result_data = Integer.parseInt(id_and_data[1]);
                         return new Integer[] { result_id, result_data };
                     } catch (NumberFormatException e2) {
-                        MU.err(mCL.mCL, "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + "\""
-                                + AU.combine(entity_name, " ") + ChatColor.DARK_RED + "\"", e2);
+                        err(myCoreLibrary.mCL, "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + "\""
+                                + combine(entity_name, " ") + ChatColor.DARK_RED + "\"", e2);
                         return null;
                     }
                 }
@@ -252,7 +257,7 @@ public class WU {
                 try {
                     result_data = Integer.parseInt(entity_name[entity_name.length - 1].substring(1, entity_name[entity_name.length - 1].length() - 1));
                 } catch (NumberFormatException e) {
-                    MU.err(mCL.mCL, "Oh, nos! I got an error trying to read the data suffix on this item name: \"" + ChatColor.WHITE + AU.combine(entity_name, " ")
+                    err(myCoreLibrary.mCL, "Oh, nos! I got an error trying to read the data suffix on this item name: \"" + ChatColor.WHITE + combine(entity_name, " ")
                             + ChatColor.DARK_RED + "\".\nI read \"" + ChatColor.WHITE
                             + entity_name[entity_name.length - 1].substring(1, entity_name[entity_name.length - 1].length() - 1) + ChatColor.DARK_RED
                             + "\" as the data value in the data suffix.", e);
@@ -485,7 +490,7 @@ public class WU {
                             for (String word : item_name)
                                 /* if word starts and ends with parentheses, it's a data suffix, so ignore it in the search; also ignore nothing words like prepositions and
                                  * articles */
-                                if (!(word.startsWith("(") && word.endsWith(")")) && !AU.contains(nothing_words, word.toLowerCase())
+                                if (!(word.startsWith("(") && word.endsWith(")")) && !contains(nothing_words, word.toLowerCase())
                                         && !Wiki.ITEM_IDS[check_id][check_data][i].toLowerCase().contains(word.toLowerCase())) {
                                     contains_query = false;
                                     break;
@@ -520,16 +525,16 @@ public class WU {
                         // try reading it as "something with the I.D. [id]:[data]"
                         String[] id_and_data = item_name[4].split(":");
                         if (id_and_data.length != 2) {
-                            MU.tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
-                                    + AU.combine(item_name) + ChatColor.DARK_RED + "\".", true);
+                            tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
+                                    + combine(item_name) + ChatColor.DARK_RED + "\".", true);
                             return null;
                         }
                         result_id = Integer.parseInt(id_and_data[0]);
                         result_data = Integer.parseInt(id_and_data[1]);
                         return new Integer[] { result_id, result_data };
                     } catch (NumberFormatException exception2) {
-                        MU.tellOps(ChatColor.DARK_RED + "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
-                                + AU.combine(item_name) + ChatColor.DARK_RED + "\".", true);
+                        tellOps(ChatColor.DARK_RED + "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
+                                + combine(item_name) + ChatColor.DARK_RED + "\".", true);
                         return null;
                     }
                 }
@@ -550,7 +555,7 @@ public class WU {
                 try {
                     result_data = Integer.parseInt(item_name[item_name.length - 1].substring(1, item_name[item_name.length - 1].length() - 1));
                 } catch (NumberFormatException e) {
-                    MU.err(mCL.mCL, "Oh, nos! I got an error trying to read the data suffix on this item name!: \"" + ChatColor.WHITE + AU.combine(item_name, " ")
+                    err(myCoreLibrary.mCL, "Oh, nos! I got an error trying to read the data suffix on this item name!: \"" + ChatColor.WHITE + combine(item_name, " ")
                             + ChatColor.DARK_RED + "\".\nI read " + ChatColor.WHITE + "\""
                             + item_name[item_name.length - 1].substring(1, item_name[item_name.length - 1].length() - 1) + "\"" + ChatColor.DARK_RED
                             + " as the data value in the data suffix.", e);
@@ -937,7 +942,7 @@ public class WU {
     public static boolean isDamageable(ItemStack item) {
         Boolean result = isDamageable(item.getTypeId());
         if (result == null) {
-            MU.tellOps(ChatColor.DARK_RED + "Someone just tried to see if this item was damageable, but I don't know what this item is! It has the I.D. " + item.getTypeId()
+            tellOps(ChatColor.DARK_RED + "Someone just tried to see if this item was damageable, but I don't know what this item is! It has the I.D. " + item.getTypeId()
                     + ". Is myPluginWiki up to date?", true);
             return false;
         }
@@ -1055,7 +1060,7 @@ public class WU {
     public static boolean isRepairableWithSomethingBesidesItself(ItemStack item) {
         Boolean result = isRepairableWithSomethingBesidesItself(item.getTypeId());
         if (result == null) {
-            MU.tellOps(ChatColor.DARK_RED
+            tellOps(ChatColor.DARK_RED
                     + "Someone just tried to see if this item was repairable with something besides itself, but I don't know what this item is! It has the I.D. "
                     + item.getTypeId() + ". Is myPluginWiki up to date?", true);
             return false;
@@ -1078,7 +1083,7 @@ public class WU {
     public static boolean isRepairableWith(ItemStack item, ItemStack item2) {
         Boolean result = isRepairableWith(item.getTypeId(), item2.getTypeId());
         if (result == null) {
-            MU.tellOps(ChatColor.DARK_RED
+            tellOps(ChatColor.DARK_RED
                     + "Someone just tried to see if this item was repairable with this other item, but I don't know what this item is! One item has the I.D. "
                     + item.getTypeId() + " and the other has the I.D. " + item2.getTypeId() + ". Is myPluginWiki up to date?", true);
             return false;
@@ -1089,9 +1094,8 @@ public class WU {
     public static boolean isRepairableWith(ItemStack item, Block block2) {
         Boolean result = isRepairableWith(item.getTypeId(), block2.getTypeId());
         if (result == null) {
-            MU.tellOps(ChatColor.DARK_RED
-                    + "Someone just tried to see if this item was repairable with this block, but I don't know what this item is! The item has the I.D. " + item.getTypeId()
-                    + " and the block has the I.D. " + block2.getTypeId() + ". Is myPluginWiki up to date?", true);
+            tellOps(ChatColor.DARK_RED + "Someone just tried to see if this item was repairable with this block, but I don't know what this item is! The item has the I.D. "
+                    + item.getTypeId() + " and the block has the I.D. " + block2.getTypeId() + ". Is myPluginWiki up to date?", true);
             return false;
         }
         return result;

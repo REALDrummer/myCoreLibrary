@@ -2,8 +2,7 @@ package REALDrummer;
 
 import org.bukkit.ChatColor;
 
-// Color Utilities
-public class CU {
+public class ColorUtilities {
     /** This method actiavtes any color codes in a given String and returns the message with color codes eliminated from the text and colors added to the text. This method is
      * necessary because it does two (2) things that <a href="ChatColor#translateAlternateColorCodes(char, String)">CraftBukkit's color code translating method</a> cannot.
      * <b>1)</b> It rearranges color codes in the text to ensure that every one is used. With CraftBukkit's standard methods, any formatting color codes (e.g. &k for magic or
