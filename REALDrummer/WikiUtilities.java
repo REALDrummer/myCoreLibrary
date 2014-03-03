@@ -12,11 +12,9 @@ import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 
-import static REALDrummer.ArrayUtilities.combine;
-import static REALDrummer.ArrayUtilities.contains;
-import static REALDrummer.MessageUtilities.err;
-import static REALDrummer.MessageUtilities.tellOps;
-import static REALDrummer.StringUtilities.writeRomanNumeral;
+import static REALDrummer.ArrayUtilities.*;
+import static REALDrummer.MessageUtilities.*;
+import static REALDrummer.StringUtilities.*;
 
 public class WikiUtilities {
     /** This method will tell whether or not a certain block will break if water or lava flows to it. No data value is required as input for this method because items with the

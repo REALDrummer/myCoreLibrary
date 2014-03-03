@@ -12,7 +12,8 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import static REALDrummer.ArrayUtilities.contains;
+import static REALDrummer.ArrayUtilities.*;
+import static REALDrummer.StringUtilities.*;
 
 public class GameUtilities {
 
@@ -172,12 +173,12 @@ public class GameUtilities {
             // make sure the location isn't outside the bounds of the world
             if (block == null || Math.abs(location.getBlockX()) >= 2000000 || Math.abs(location.getBlockZ()) >= 2000000 || location.getY() < 0
                     || location.getY() > location.getWorld().getMaxHeight()) {
-                myCoreLibrary.debug("No good target found; search ended at " + SU.writeLocation(location, true, true));
+                myCoreLibrary.debug("No good target found; search ended at " + writeLocation(location, true, true));
                 return null;
             }
             // make sure the location is either not a non-solid block or, if we're not skipping switches, a switch
             if (!contains(Wiki.NON_SOLID_BLOCK_IDS, (short) block.getTypeId())) {
-                myCoreLibrary.debug("found target block at " + SU.writeLocation(block.getLocation(), true, true));
+                myCoreLibrary.debug("found target block at " + writeLocation(block.getLocation(), true, true));
                 return block;
             }
         }

@@ -5,8 +5,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import static REALDrummer.ArrayUtilities.contains;
-import static REALDrummer.ColorUtilities.colorCode;
+import static REALDrummer.ArrayUtilities.*;
+import static REALDrummer.ColorUtilities.*;
 
 public class MessageUtilities {
     public static void confirmDisable(ChatColor color, String... disable_messages) {

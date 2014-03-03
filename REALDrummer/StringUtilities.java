@@ -9,9 +9,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 
-import static REALDrummer.MessageUtilities.tellOps;
-import static REALDrummer.ArrayUtilities.combine;
-import static REALDrummer.ArrayUtilities.writeArray;
+import static REALDrummer.ArrayUtilities.*;
+import static REALDrummer.MessageUtilities.*;
 
 public class StringUtilities {
     public static final String[] BORDERS = { "[]", "\\/", "\"*", "_^", "-=", ":;", "&%", "#@", ",.", "<>", "~$", ")(", "+-", "|o" };

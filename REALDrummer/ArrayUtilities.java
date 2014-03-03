@@ -2,7 +2,7 @@ package REALDrummer;
 
 import java.util.ArrayList;
 
-import static REALDrummer.MessageUtilities.err;
+import static REALDrummer.MessageUtilities.*;
 
 public class ArrayUtilities {
     public static <T> ArrayList<T> arrayToArrayList(T[] array) {
