@@ -3,16 +3,20 @@ package REALDrummer;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static REALDrummer.ArrayUtilities.writeArrayList;
+import org.bukkit.ChatColor;
+
+import static REALDrummer.ArrayUtilities.*;
+import static REALDrummer.MessageUtilities.*;
 
 @SuppressWarnings("unchecked")
 public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, Cloneable {
     private T data = null;
     private myList<T> left = null, right = null, root = null;
 
-    // DONE: added and implemented isLeft() and isRight()
-    // DONE: implemented add(), find(), get(), contains[...]()
-    // DONE: added and implemented lowestValue(), lowestValuedNode(), highestValue(), highestValuedNode()
+    // DONE: implemented compareTo(myList<T>)
+    // DONE: implemented next() and previous()
+    // DONE: added and implemented next(int) and previous(int)
+    // DONE: implemented lastIndexOf() and lastIndicesOf() methods
 
     public myList(T... objects) {
         if (objects.length >= 1)
@@ -89,9 +93,13 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     private int find(T object, int current_index) {
-        if (data.equals(object))
-            return current_index + (left != null ? left.length() : 0);
-        else if (compareTo(object) > 0)
+        if (data.equals(object)) {
+            // find the lowest index value of that item
+            myList<T> clone = clone();
+            while (clone.hasLeft() && left.data.equals(object))
+                clone = clone.left;
+            return current_index + (clone.hasLeft() ? clone.left.length() : 0);
+        } else if (compareTo(object) > 0)
             if (hasRight())
                 return right.find(object, current_index + (hasLeft() ? left.length() : 0) + 1);
             else
@@ -114,26 +122,22 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
             return right.get(index, current_index + left_length + 1);
     }
 
-    private myList<T> highestValuedNode() {
-        if (isEmpty())
-            return null;
-
-        myList<T> highest_node = clone();
-        while (highest_node.hasRight())
-            highest_node = highest_node.right;
-
-        return highest_node;
-    }
-
-    private myList<T> lowestValuedNode() {
-        if (isEmpty())
-            return null;
-
-        myList<T> lowest_node = clone();
-        while (lowest_node.hasLeft())
-            lowest_node = lowest_node.left;
-
-        return lowest_node;
+    private int lastIndexOf(T object, int current_index) {
+        if (data.equals(object)) {
+            // find the highest index value of that item
+            myList<T> clone = clone();
+            while (clone.hasRight() && right.data.equals(object))
+                clone = clone.right;
+            return current_index + (clone.hasLeft() ? clone.left.length() : 0);
+        } else if (compareTo(object) > 0)
+            if (hasRight())
+                return right.find(object, current_index + (hasLeft() ? left.length() : 0) + 1);
+            else
+                return -1;
+        else if (hasLeft())
+            return left.find(object, current_index);
+        else
+            return -1;
     }
 
     // public methods
@@ -323,6 +327,17 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
             return highestValuedNode().data;
     }
 
+    public myList<T> highestValuedNode() {
+        if (isEmpty())
+            return null;
+
+        myList<T> highest_node = clone();
+        while (highest_node.hasRight())
+            highest_node = highest_node.right;
+
+        return highest_node;
+    }
+
     public int indexOf(T object) {
         return find(object);
     }
@@ -340,7 +355,11 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public myList<T> intersect(T... list) {
-
+        myList<T> intersect = new myList<T>();
+        for (T object : list)
+            if (contains(object))
+                intersect.add(object);
+        return intersect;
     }
 
     public myList<T> intersect(Collection<T> list) {
@@ -348,7 +367,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public myList<T> intersect(myList<T> list) {
-
+        return intersect(list.toArray());
     }
 
     public boolean isBalanced() {
@@ -379,11 +398,14 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public int lastIndexOf(T object) {
-
+        return lastIndexOf(object, 0);
     }
 
     public int[] lastIndicesOf(T... objects) {
-
+        int[] results = new int[objects.length];
+        for (int i = 0; i < objects.length; i++)
+            results[i] = lastIndexOf(objects[i]);
+        return results;
     }
 
     public int[] lastIndicesOf(Collection<T> objects) {
@@ -391,7 +413,7 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     }
 
     public int[] lastIndicesOf(myList<T> objects) {
-
+        return lastIndicesOf(objects.toArray());
     }
 
     public myList<T> left() {
@@ -423,12 +445,120 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
             return lowestValuedNode().data;
     }
 
-    public myList<T> next() {
+    public myList<T> lowestValuedNode() {
+        if (isEmpty())
+            return null;
 
+        myList<T> lowest_node = clone();
+        while (lowest_node.hasLeft())
+            lowest_node = lowest_node.left;
+
+        return lowest_node;
+    }
+
+    public myList<T> next() {
+        // if a leaf has no root, it's a one-item myList, so there is no next
+        if (isEmpty() || isLeaf() && !hasRoot())
+            return null;
+        else if (hasRight())
+            return right.lowestValuedNode();
+        // if it's the left and has no right, the next is simply the root
+        else if (isLeft())
+            return root;
+        // if a leaf is the right, search up roots until a root is another root's left, then return the root of that root
+        else if (isRight()) {
+            myList<T> clone = clone();
+            // first, go up the roots as long as the root is the right of another root
+            while (isRight())
+                clone = clone.root;
+            // then, if the root is the root of the whole list (!hasRoot()), we know that there's nothing more to the right of this, so we've reached the end of the list
+            if (!clone.hasRoot())
+                return null;
+            else
+                return clone.root;
+        }
+
+        // if it gets this far, I'm not sure what happened, but send an error report
+        tellOps(ChatColor.DARK_RED + "I'm not sure that I got this list's next node correctly.\nThe node's data is " + data.toString() + ".", true);
+        if (hasRoot())
+            if (isLeft())
+                tellOps(ChatColor.DARK_RED + "It's " + (data == null ? "null" : data.toString()) + "'s left node.", true);
+            else
+                tellOps(ChatColor.DARK_RED + "It's " + (data == null ? "null" : data.toString()) + "'s right node.", true);
+        else
+            tellOps(ChatColor.DARK_RED + "It has no root.", true);
+        if (hasLeft())
+            tellOps(ChatColor.DARK_RED + "Its left is " + (data == null ? "null" : data.toString()) + ".", true);
+        else
+            tellOps(ChatColor.DARK_RED + "It has no left node.", true);
+        if (hasRight())
+            tellOps(ChatColor.DARK_RED + "Its right is " + (data == null ? "null" : data.toString()) + ".", true);
+        else
+            tellOps(ChatColor.DARK_RED + "It has no right node.", true);
+        return null;
+    }
+
+    public myList<T> next(int amount) {
+        myList<T> clone = clone();
+        for (int i = 0; i < amount; i++) {
+            clone = clone.next();
+            if (clone == null)
+                return null;
+        }
+        return clone;
     }
 
     public myList<T> previous() {
+        // if a leaf has no root, it's a one-item myList, so there is no previous
+        if (isEmpty() || isLeaf() && !hasRoot())
+            return null;
+        else if (hasLeft())
+            return left.highestValuedNode();
+        // if it's the left and has no right, the next is simply the root
+        else if (isRight())
+            return root;
+        // if a leaf is the right, search up roots until a root is another root's left, then return the root of that root
+        else if (isLeft()) {
+            myList<T> clone = clone();
+            // first, go up the roots as long as the root is the right of another root
+            while (isLeft())
+                clone = clone.root;
+            // then, if the root is the root of the whole list (!hasRoot()), we know that there's nothing more to the right of this, so we've reached the end of the list
+            if (!clone.hasRoot())
+                return null;
+            else
+                return clone.root;
+        }
 
+        // if it gets this far, I'm not sure what happened, but send an error report
+        tellOps(ChatColor.DARK_RED + "I'm not sure that I got this list's previous node correctly.\nThe node's data is " + (data == null ? "null" : data.toString()) + ".",
+                true);
+        if (hasRoot())
+            if (isLeft())
+                tellOps(ChatColor.DARK_RED + "It's " + (data == null ? "null" : data.toString()) + "'s left node.", true);
+            else
+                tellOps(ChatColor.DARK_RED + "It's " + (data == null ? "null" : data.toString()) + "'s right node.", true);
+        else
+            tellOps(ChatColor.DARK_RED + "It has no root.", true);
+        if (hasLeft())
+            tellOps(ChatColor.DARK_RED + "Its left is " + (data == null ? "null" : data.toString()) + ".", true);
+        else
+            tellOps(ChatColor.DARK_RED + "It has no left node.", true);
+        if (hasRight())
+            tellOps(ChatColor.DARK_RED + "Its right is " + (data == null ? "null" : data.toString()) + ".", true);
+        else
+            tellOps(ChatColor.DARK_RED + "It has no right node.", true);
+        return null;
+    }
+
+    public myList<T> previous(int amount) {
+        myList<T> clone = clone();
+        for (int i = 0; i < amount; i++) {
+            clone = clone.previous();
+            if (clone == null)
+                return null;
+        }
+        return clone;
     }
 
     public myList<T> sublist(int begin_index) {
@@ -579,7 +709,6 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
     @Override
     public myList<T> clone() {
         myList<T> list = new myList<T>(data);
-        list.number_of = number_of;
         list.left = left;
         list.right = right;
         list.root = root;
@@ -596,18 +725,32 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
             return 1;
 
         // make a clone of this list to parse through for comparative testing
-        myList<T> clone = clone();
+        myList<T> this_clone = clone(), list_clone = list.clone();
 
-        /* store the lengths of both lists so that we can keep track of which node is the root; if this is not done, then this method will search through the entire part of
-         * the list even if the user-specified "list" is only a sublist of another myList */
-        int clone_length = clone.length(), list_length = list.length();
+        // remove the root from each list in order to ensure that if a list is a sublist of a larger list, then only this list will be compared, not the entire list
+        this_clone.root = null;
+        list_clone.root = null;
 
         // start at the lowest nodes of each list
-        clone = clone.lowestValuedNode();
-        list = list.lowestValuedNode();
-        int comparison = 0;
-         while (comparison==0&&hasNext()&&list.hasNext())
-             
+        this_clone = this_clone.lowestValuedNode();
+        list_clone = list_clone.lowestValuedNode();
+
+        // parse through each list and compare each element until a list ends or there is a difference in the elements
+        int comparison = this_clone.data.compareTo(list_clone.data);
+        while (comparison == 0 && this_clone.hasNext() && list_clone.hasNext()) {
+            this_clone = this_clone.next();
+            list_clone = list_clone.next();
+            comparison = this_clone.data.compareTo(list_clone.data);
+        }
+
+        // if comparison still = 0, the loop must have terminated becaose one of the lists ran out of elements; in that case, return 1 or -1
+        if (comparison == 0)
+            if (!this_clone.hasNext())
+                return -1;
+            else
+                return 1;
+        else
+            return comparison;
     }
 
     public int compareTo(T object) {
@@ -628,9 +771,8 @@ public class myList<T extends Comparable<T>> implements Comparable<myList<T>>, C
         // start here
         myList<T> list = this;
 
-        // find the first SEQUENTIAL node, which will be at the far far left
-        while (list.hasLeft())
-            list = list.left;
+        // find the first SEQUENTIAL node
+        list = list.lowestValuedNode();
 
         // add the elements of the list to a new ArrayList of toString()s sequentially
         ArrayList<String> to_return = new ArrayList<String>();
