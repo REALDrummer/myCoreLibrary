@@ -1,6 +1,7 @@
 package REALDrummer;
 
 public class Wiki {
+    // material names
     public static final String[][] ENCHANTMENT_IDS = {
             { "Protection", "Environmental Protection", "normal Protection", "regular Protection", "general Protection" },
             { "Fire Protection", "lava protection", "burn protection", "magma protection" },
@@ -841,31 +842,44 @@ public class Wiki {
                     { { "\"11\" music discs", "an \"11\" music disc", "\"11\" disks", "\"11\" records", "\"11\" CDs" } },
                     { { "\"wait\" music discs", "\"wait\" disks", "\"wait\" records", "\"wait\" CDs" } } };
 
+    // color coding info
     public static final char[] COLOR_CODE_CHARS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'k', 'l', 'm', 'n', 'o', 'r' };
     public static final char[] COLOR_COLOR_CODE_CHARS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     public static final char[] FORMATTING_COLOR_CODE_CHARS = { 'k', 'l', 'm', 'n', 'o', 'r' };
-
     public static final String[] MINECRAFT_COLORS = { "black", "red", "green", "brown", "blue", "purple", "cyan", "light gray", "gray", "pink", "lime", "yellow",
             "light blue", "magenta", "orange", "white" };
 
+    // liquid breakage properties
     public static final short[] CAN_BE_BROKEN_BY_LIQUIDS_IDS = { 0, 27, 28, 30, 31, 32, 37, 38, 39, 40, 50, 51, 55, 59, 66, 69, 75, 76, 78, 93, 94, 104, 105, 106, 115, 127,
             131, 132, 140, 141, 142, 144, 149, 150, 157 };
+
+    // blocks with abnormal heights
     public static final short[] FENCE_HEIGHT_BLOCK_IDS = { 85, 107, 139 };
+    public static final short[] SOLID_PARTIAL_HEIGHT_BLOCK_IDS = { 44, 93, 94, 96, 111, 126, 149, 150, 151 };
+
+    // lockable blocks
     public static final short[] LOCKABLE_CONTAINER_IDS = { 23, 54, -58, 61, 62, 84, -116, 117, 130, 137, 138, -145, 146, 154, 158 };
     public static final short[] LOCKABLE_PORTAL_IDS = { 64, 71, 96, 107 };
     public static final short[] LOCKABLE_SWITCH_IDS = { 28, 69, 70, 72, 77, 143, 147, 148 };
+
+    // blocks that must be attached to other blocks
     public static final short[] MUST_BE_ATTACHED_BOTTOM_ONLY_IDS = { 6, 26, 27, 28, 31, 32, 37, 38, 39, 40, 55, 59, 63, 64, 66, 70, 71, 72, 78, 81, 83, 93, 94, 104, 105, 111,
             115, 132, 140, 147, 148, 149, 150, 157 };
     public static final short[] MUST_BE_ATTACHED_CAN_BE_SIDEWAYS_IDS = { 50, 65, 68, 69, 75, 76, 77, 96, 106, 127, 131 };
+
+    // physical block types
     public static final short[] NON_SOLID_BLOCK_IDS = { 0, 6, 27, 28, 30, 31, 32, 37, 38, 39, 40, 50, 51, 55, 59, 63, 64, 65, 66, 68, 69, 70, 71, 72, 75, 76, 77, 78, 83, 90,
             93, 94, 104, 105, 115, 119, 131, 132, 140, 141, 142, 142, 144, 147, 148, 149, 150, 157, 171, 175 };
-    public static final short[] SOLID_PARTIAL_HEIGHT_BLOCK_IDS = { 44, 93, 94, 96, 111, 126, 149, 150, 151 };
+    public static final short[] LIQUID_BLOCK_IDS = { 8, 9, 10, 11 };
 
+    // tool repairing info
     public static final short[][] DAMAGEABLE_ITEM_IDS = { { 256, 265 }, { 257, 265 }, { 258, 265 }, { 259 }, { 261 }, { 267, 265 }, { 268, 5 }, { 269, 5 }, { 270, 5 },
             { 271, 5 }, { 272, 4 }, { 273, 4 }, { 274, 4 }, { 275, 4 }, { 276, 264 }, { 277, 264 }, { 278, 264 }, { 279, 264 }, { 283, 266 }, { 284, 266 }, { 285, 266 },
             { 286, 266 }, { 290, 5 }, { 291, 4 }, { 292, 265 }, { 293, 264 }, { 294, 266 }, { 298, 334 }, { 299, 334 }, { 300, 334 }, { 301, 334 }, { 302, 265 },
             { 303, 265 }, { 304, 265 }, { 305, 265 }, { 306, 265 }, { 307, 265 }, { 308, 265 }, { 309, 265 }, { 310, 264 }, { 311, 264 }, { 312, 264 }, { 313, 264 },
             { 314, 266 }, { 315, 266 }, { 316, 266 }, { 317, 266 }, { 346 }, { 359 }, { 398 } };
+
+    // gaps for all the data structures
     public static final short[][] ENCHANTMENT_GAPS = { { 7, 16 }, { 21, 32 }, { 35, 48 }, { 51, 61 } };
     public static final short[][] ENTITY_GAPS = { { 2, 8 }, { 22, 41 }, { 66, 90 }, { 99, 120 }, { 120, 200 } };
     public static final short[][] ITEM_GAPS = { { 164, 170 }, { 175, 256 }, { 408, 417 }, { 422, 2256 } };
