@@ -42,6 +42,8 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
 
     public ChatColor COLOR = ChatColor.GOLD;
     
+    // TODO: take into account op_command in the commands
+    
     private myList<mySetting> settings = new myList<mySetting>();
     private String abbreviation = null;
     private boolean auto_update = true;

@@ -13,9 +13,9 @@ commands:
       aliases: [ids]
       description: This command outputs the item name and I.D. that coordinate with the item name or I.D. given.
       usage: |
-           /<command> [item I.D. or name]
+           /<command> (query)
    recipe:
       aliases: [craft]
       description: This command outputs the crafting recipe for the item given (by I.D. or by name).
       usage: |
-           /<command> [item I.D. or name]
+           /<command> (query)
