@@ -1,56 +1,46 @@
 package REALDrummer.settings;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-
-import static REALDrummer.utils.StringUtilities.*;
+import REALDrummer.myCoreLibrary;
+import static REALDrummer.utils.StringUtilities.readTime;
+import static REALDrummer.utils.StringUtilities.writeTime;
 
 public class myTSetting extends mySetting {
-    public myTSetting(String target, String key, long initial_value) {
-        this.target = target;
+    public myTSetting(String key, long initial_value) {
         this.key = key;
-        value = initial_value;
+        this.value = initial_value;
     }
 
-    // getters
+    public myTSetting(String target, String key, long initial_value) {
+        this.target = target;
+        new myTSetting(key, initial_value);
+    }
+
+    // getters are instantiated in myLSetting
     public long getValue() {
         return (long) value;
     }
 
     // readers and writers
     @Override
-    public boolean read(BufferedReader in) {
+    public myTSetting read(String save_line) {
+        myCoreLibrary.mCL.debug("reading myTSetting: \"" + save_line + "\"");
+        save_line = save_line.trim();
+
+        String[] split = save_line.split(":");
+        if (split.length < 2) {
+            myCoreLibrary.mCL.debug("myTSetting read failure; no \":\" found");
+            return null;
+        }
+
         try {
-            String save_line = in.readLine();
-
-            // if the save line wasn't found or isn't correctly formatted, return false to indicate an error
-            if (save_line == null || !save_line.trim().toLowerCase().startsWith(key.toLowerCase()) || !save_line.contains(":"))
-                return false;
-
-            // attempt to read the value
-            long read_value;
-            try {
-                read_value = readTime(save_line.substring(save_line.indexOf(':') + 1));
-            } catch (NumberFormatException | StringIndexOutOfBoundsException exception) {
-                return false;
-            }
-
-            value = read_value;
-            return true;
-        } catch (IOException exception) {
-            return false;
+            return new myTSetting(split[0], readTime(split[1]));
+        } catch (NumberFormatException exception) {
+            return null;
         }
     }
 
     @Override
-    public boolean write(BufferedWriter out) {
-        try {
-            out.write("    " + (!target.equals("\\server") ? "    " : "") + key + ": " + writeTime(getValue(), false));
-            out.newLine();
-            return true;
-        } catch (IOException exception) {
-            return false;
-        }
+    public String write() {
+        return key + ": " + writeTime(getValue(), false);
     }
 }

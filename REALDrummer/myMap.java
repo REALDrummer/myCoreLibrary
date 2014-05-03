@@ -3,6 +3,8 @@ package REALDrummer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import org.bukkit.ChatColor;
 
@@ -12,113 +14,214 @@ import static REALDrummer.utils.ArrayUtilities.*;
 import static REALDrummer.utils.MessageUtilities.*;
 
 @SuppressWarnings("unchecked")
-public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
-    private T data = null;
-    private myList<T> left = null, right = null, root = null;
+public class myMap<K extends Comparable<? super K>, V> implements Comparable<myMap<K, V>>, Cloneable, Map<K, V>, Iterable<K> {
+    private K key = null;
+    private V value = null;
+    private myMap<K, V> left = null, right = null, root = null;
+
+    // TODO: change all "add"s to "put"s
+    public void oldStuff() {
+        // public int find(T object) {
+        // return find(object, hasLeft() ? left.length() : 0);
+        // }
+        //
+        // public int[] find(T... objects) {
+        // int[] indices = new int[objects.length];
+        // for (int i = 0; i < objects.length; i++)
+        // indices[i] = find(objects[i]);
+        // return indices;
+        // }
+        //
+        // public int[] find(Collection<T> objects) {
+        // return find((T[]) objects.toArray());
+        // }
+        //
+        // public int[] find(myList<T> objects) {
+        // return find(objects.toArray());
+        // }
+
+        // public int add(T object) {
+        // if (object == null)
+        // throw new IllegalArgumentException();
+        //
+        // if (isEmpty()) {
+        // data = object;
+        // return 0;
+        // } else
+        // return add(object, hasLeft() ? left.length() : 0);
+        // }
+        //
+        // public int[] add(T... objects) {
+        // if (objects.length == 0)
+        // return new int[0];
+        //
+        // int[] indices = new int[objects.length];
+        // for (int i = 0; i < objects.length; i++) {
+        // indices[i] = add(objects[i]);
+        // /* add 1 to all indices greater than index already in the indices list to account for the fact that adding an element to the list shifts the indices of every
+        // * element after it in the list */
+        // for (int j = 0; j < i; j++)
+        // if (indices[j] >= indices[i])
+        // indices[j]++;
+        // }
+        //
+        // return indices;
+        // }
+        //
+        // public int[] add(Collection<T> objects) {
+        // return add((T[]) objects.toArray());
+        // }
+        //
+        // public int[] add(myList<T> objects) {
+        // return add(objects.toArray());
+        // }
+
+    }
 
     // constructors
-    public myList(T... objects) {
-        add(objects);
+    public myMap(Object... objects) {
+        for (int i = 0; i < objects.length; i += 2)
+            try {
+                put((K) objects[i], (V) objects[i + 1]);
+            } catch (ClassCastException exception) {
+                err(myCoreLibrary.mCL, "Someone gave me stuff to put into this myMap that didn't match the proper keys and/or values!", exception, "key: " + objects[i],
+                        "value: " + objects[i + 1], "index of arguments=" + i);
+            } catch (ArrayIndexOutOfBoundsException exception) {
+                err(myCoreLibrary.mCL, "Someone gave me an odd number of things to put into a map like they expect me to put in a key without a value!", exception,
+                        "objects: " + writeArray(objects));
+            }
     }
 
-    public myList(Collection<T> objects) {
-        add(objects);
+    public myMap(Collection<Object> objects) {
+        new myMap(objects.toArray());
     }
 
-    public myList(myList<T> objects) {
-        add(objects);
+    public myMap(myMap<K, V> objects) {
+        put(objects);
     }
 
     // private recursive methods
-    private int add(T object, int current_index) {
-        // see whether the element should be added to the left or right side
-        if (compareTo(object) <= 0)
+    private int put(K key, V value, int current_index) {
+        // see whether the element should be added to the left or right side or replaced at the current index
+        if (this.key.compareTo(key) == 0) {
+            // if the key is exactly the same, just change the value and end the process
+            this.value = value;
+            return current_index;
+        } else if (this.key.compareTo(key) < 0)
             // the right side is the correct side
             if (!hasRight() || !right.isFull() || hasLeft() && left.isFull() && right.length() <= left.length())
-                return addRight(object, current_index);
+                return putRight(key, value, current_index);
             else {
                 // knock-down data-shuffle from the right to the left side
-                addLeft(data, current_index);
+                putLeft(this.key, this.value, current_index);
                 current_index++; // add 1 to the current index since we added an element to the left side of the list
-                myList<T> lowest_right = right.lowestValuedNode();
-                if (lowest_right.compareTo(object) < 0) {
-                    // if the lowest_right's data is lower than object, use lowest_right for the knock-down
-                    data = lowest_right.data;
+                myMap<K, V> lowest_right = right.lowestValuedNode();
+                if (lowest_right.key.compareTo(key) < 0) {
+                    // if the lowest_right's data is lower than the given key, use lowest_right for the knock-down
+                    this.key = lowest_right.key;
+                    this.value = lowest_right.value;
                     lowest_right.remove();
-                    return addRight(object, current_index);
+                    return putRight(key, value, current_index);
                 } else {
-                    // if the object is lower than lowest_right's data, use object for the knock-down
-                    data = object;
+                    // if the object is lower than lowest_right's data, use the given key and value for the knock-down
+                    this.key = key;
+                    this.value = value;
                     return current_index;
                 }
             }
         else {
             // the left side is the correct side
             if (!hasLeft() || !left.isFull() || hasRight() && right.isFull() && left.length() <= right.length())
-                return addLeft(object, current_index);
+                return putLeft(key, value, current_index);
             else {
                 // knock-down data-shuffle from the left to the right side
-                addRight(data, current_index);
-                myList<T> highest_left = left.highestValuedNode();
-                if (highest_left.compareTo(object) > 0) {
-                    // if the highest_left's data is higher than object, use highest_left for the knock-down
-                    data = highest_left.data;
+                putRight(this.key, this.value, current_index);
+                myMap<K, V> highest_left = left.highestValuedNode();
+                if (highest_left.key.compareTo(key) > 0) {
+                    // if the highest_left's data is higher than the given key, use highest_left for the knock-down
+                    this.key = highest_left.key;
+                    this.value = highest_left.value;
                     highest_left.remove();
                 } else {
-                    // if the object is higher than highest_right's data, use object for the knock-down
-                    data = object;
+                    // if the object is higher than highest_right's data, use the given key and value for the knock-down
+                    this.key = key;
+                    this.value = value;
                     return current_index;
                 }
 
-                return addLeft(object, current_index);
+                return putLeft(key, value, current_index);
             }
         }
     }
 
-    private int addLeft(T object, int current_index) {
+    private int putLeft(K key, V value, int current_index) {
         if (hasLeft())
-            return left.add(object, current_index - (left.hasRight() ? left.right.length() : 0) - 1);
+            return left.put(key, value, current_index - (left.hasRight() ? left.right.length() : 0) - 1);
         else {
-            left = new myList<T>(object);
+            left = new myMap<K, V>(key, value);
             left.root = this;
             return current_index;
         }
     }
 
-    private int addRight(T object, int current_index) {
+    private int putRight(K key, V value, int current_index) {
         if (hasRight())
-            return right.add(object, current_index + (right.hasLeft() ? right.left.length() : 0) + 1);
+            return right.put(key, value, current_index + (right.hasLeft() ? right.left.length() : 0) + 1);
         else {
-            right = new myList<T>(object);
+            right = new myMap<K, V>(key, value);
             right.root = this;
             return current_index + 1;
         }
     }
 
-    private int find(T object, int current_index) {
-        if (data.equals(object)) {
+    private int indexOf(K key, int current_index) {
+        if (this.key.equals(key)) {
             // find the lowest index value of that item
             int lower_index = -1;
             if (hasLeft())
-                lower_index = left.find(object, current_index - 1 - (left.hasRight() ? left.right.length() : 0));
+                lower_index = left.indexOf(key, current_index - 1 - (left.hasRight() ? left.right.length() : 0));
 
             // return the lowest index if there was a lower index or this index otherwise (adjusted for the left)
             if (lower_index == -1)
                 return current_index;
             else
                 return lower_index;
-        } else if (compareTo(object) <= 0)
+        } else if (this.key.compareTo(key) < 0)
             if (hasRight())
-                return right.find(object, current_index + 1 + (right.hasLeft() ? right.left.length() : 0));
+                return right.indexOf(key, current_index + 1 + (right.hasLeft() ? right.left.length() : 0));
             else
                 return -1;
         else if (hasLeft())
-            return left.find(object, current_index - 1 - (left.hasRight() ? left.right.length() : 0));
+            return left.indexOf(key, current_index - 1 - (left.hasRight() ? left.right.length() : 0));
         else
             return -1;
     }
 
-    private myList<T> getNode(int index, int current_index) {
+    private K getKey(int index, int current_index) {
+        int left_length = hasLeft() ? left.length() : 0;
+        if (left_length + current_index > index)
+            return left.getKey(index, current_index);
+        else if (left_length + current_index == index)
+            return this.key;
+        else if (!hasRight())
+            return null;
+        else
+            return right.getKey(index, current_index + left_length + 1);
+    }
+
+    private V getValue(int index, int current_index) {
+        int left_length = hasLeft() ? left.length() : 0;
+        if (left_length + current_index > index)
+            return left.getValue(index, current_index);
+        else if (left_length + current_index == index)
+            return this.value;
+        else if (!hasRight())
+            return null;
+        else
+            return right.getValue(index, current_index + left_length + 1);
+    }
+
+    private myMap<K, V> getNode(int index, int current_index) {
         int left_length = hasLeft() ? left.length() : 0;
         if (left_length + current_index > index)
             return left.getNode(index, current_index);
@@ -130,27 +233,9 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
             return right.getNode(index, current_index + left_length + 1);
     }
 
-    private int lastIndexOf(T object, int current_index) {
-        if (data.equals(object)) {
-            // find the highest index value of that item
-            myList<T> clone = this;
-            while (clone.hasRight() && right.data.equals(object))
-                clone = clone.right;
-            return current_index + (clone.hasLeft() ? clone.left.length() : 0);
-        } else if (compareTo(object) > 0)
-            if (hasRight())
-                return right.find(object, current_index + (hasLeft() ? left.length() : 0) + 1);
-            else
-                return -1;
-        else if (hasLeft())
-            return left.find(object, current_index);
-        else
-            return -1;
-    }
-
-    private myList<T> sublist(int begin_index, int end_index, int current_index, myList<T> sublist) {
+    private myMap<K, V> submap(int begin_index, int end_index, int current_index, myMap<K, V> submap) {
         // first, search through the tree until we find the first element whose index is within the bounds; this element will be the root of the sublist
-        myList<T> clone = this;
+        myMap<K, V> clone = this;
         while (begin_index > current_index || end_index < current_index)
             if (begin_index > current_index && right != null) {
                 clone = clone.right;
@@ -163,56 +248,20 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
 
         // once we have found the root of the sublist, add that element to the new list and check the left and right for additional elements
         if (hasLeft()) {
-            myList<T> left_sublist = sublist(begin_index, end_index, current_index - (left.hasRight() ? left.right.length() : 0) - 1, left);
-            if (left_sublist != null)
-                clone.add(left_sublist);
+            myMap<K, V> left_submap = submap(begin_index, end_index, current_index - (left.hasRight() ? left.right.length() : 0) - 1, left);
+            if (left_submap != null)
+                clone.put(left_submap);
         }
         if (hasRight()) {
-            myList<T> right_sublist = sublist(begin_index, end_index, current_index + (right.hasLeft() ? right.left.length() : 0) + 1, right);
-            if (right_sublist != null)
-                clone.add(right_sublist);
+            myMap<K, V> right_submap = submap(begin_index, end_index, current_index + (right.hasLeft() ? right.left.length() : 0) + 1, right);
+            if (right_submap != null)
+                clone.put(right_submap);
         }
 
         return clone;
     }
 
     // public methods
-    public int add(T object) {
-        if (object == null)
-            throw new IllegalArgumentException();
-
-        if (isEmpty()) {
-            data = object;
-            return 0;
-        } else
-            return add(object, hasLeft() ? left.length() : 0);
-    }
-
-    public int[] add(T... objects) {
-        if (objects.length == 0)
-            return new int[0];
-
-        int[] indices = new int[objects.length];
-        for (int i = 0; i < objects.length; i++) {
-            indices[i] = add(objects[i]);
-            /* add 1 to all indices greater than index already in the indices list to account for the fact that adding an element to the list shifts the indices of every
-             * element after it in the list */
-            for (int j = 0; j < i; j++)
-                if (indices[j] >= indices[i])
-                    indices[j]++;
-        }
-
-        return indices;
-    }
-
-    public int[] add(Collection<T> objects) {
-        return add((T[]) objects.toArray());
-    }
-
-    public int[] add(myList<T> objects) {
-        return add(objects.toArray());
-    }
-
     public void clear() {
         free();
     }
@@ -309,25 +358,6 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
                 + (hasRoot() ? "; has root!" : "") + "\n" + toString());
     }
 
-    public int find(T object) {
-        return find(object, hasLeft() ? left.length() : 0);
-    }
-
-    public int[] find(T... objects) {
-        int[] indices = new int[objects.length];
-        for (int i = 0; i < objects.length; i++)
-            indices[i] = find(objects[i]);
-        return indices;
-    }
-
-    public int[] find(Collection<T> objects) {
-        return find((T[]) objects.toArray());
-    }
-
-    public int[] find(myList<T> objects) {
-        return find(objects.toArray());
-    }
-
     public myList<T> findNode(T object) {
         if (data.equals(object)) {
             // find the lowest index value of that item
@@ -387,35 +417,57 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
         root = null;
     }
 
-    public T get(int index) {
-        myList<T> node = getNode(index, 0);
-
-        if (node == null)
-            return null;
-        else
-            return node.data;
+    public T getKey(int index) {
+        return get(index, 0);
     }
 
-    public T[] get(int... indices) {
+    public T[] getKeys(int... indices) {
         Object[] results = new Object[indices.length];
         for (int i = 0; i < indices.length; i++)
             results[i] = get(indices[i]);
         return (T[]) results;
     }
 
-    public int get(T object) {
+    public int getKey(T object) {
         return find(object);
     }
 
-    public int[] get(T... objects) {
+    public int[] getKeys(T... objects) {
         return find(objects);
     }
 
-    public int[] get(Collection<T> objects) {
+    public int[] getKeys(Collection<T> objects) {
         return find(objects);
     }
 
-    public int[] get(myList<T> objects) {
+    public int[] getKeys(myList<T> objects) {
+        return find(objects);
+    }
+
+    public T getValue(int index) {
+        return get(index, 0);
+    }
+
+    public T[] getValues(int... indices) {
+        Object[] results = new Object[indices.length];
+        for (int i = 0; i < indices.length; i++)
+            results[i] = get(indices[i]);
+        return (T[]) results;
+    }
+
+    public int getValue(T object) {
+        return find(object);
+    }
+
+    public int[] getValues(T... objects) {
+        return find(objects);
+    }
+
+    public int[] getValues(Collection<T> objects) {
+        return find(objects);
+    }
+
+    public int[] getValues(myList<T> objects) {
         return find(objects);
     }
 
@@ -547,25 +599,6 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
 
     public boolean isRight() {
         return hasRoot() && root.hasRight() && this == root.right;
-    }
-
-    public int lastIndexOf(T object) {
-        return lastIndexOf(object, 0);
-    }
-
-    public int[] lastIndicesOf(T... objects) {
-        int[] results = new int[objects.length];
-        for (int i = 0; i < objects.length; i++)
-            results[i] = lastIndexOf(objects[i]);
-        return results;
-    }
-
-    public int[] lastIndicesOf(Collection<T> objects) {
-        return lastIndicesOf((T[]) objects.toArray());
-    }
-
-    public int[] lastIndicesOf(myList<T> objects) {
-        return lastIndicesOf(objects.toArray());
     }
 
     public int length() {
@@ -944,7 +977,8 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
         return new myList<T>(this);
     }
 
-    public int compareTo(myList<T> list) {
+    @Override
+    public int compareTo(myMap<K, V> list) {
         if (isEmpty() && list.isEmpty())
             return 0;
         else if (isEmpty())
@@ -959,11 +993,11 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
         myList<T> this_parser = lowestValuedNode(), list_parser = list.lowestValuedNode();
 
         // parse through each list and compare each element until a list ends or there is a difference in the elements
-        int comparison = this_parser.compareTo(list_parser.data);
+        int comparison = this_parser.data.compareTo(list_parser.data);
         for (int i = 0; comparison != 0 && (this_length <= list_length && i < this_length || i < list_length); i++) {
             this_parser = this_parser.next();
             list_parser = list_parser.next();
-            comparison = this_parser.compareTo(list_parser.data);
+            comparison = this_parser.data.compareTo(list_parser.data);
         }
 
         // if comparison still = 0, the loop must have terminated because one of the lists ran out of elements, so compare the lengths
@@ -973,12 +1007,8 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
             return comparison;
     }
 
-    @Override
     public int compareTo(T object) {
-        if (data instanceof Comparable<?>)
-            return ((Comparable<T>) data).compareTo(object);
-        else
-            return data.toString().compareTo(object.toString());
+        return data.compareTo(object);
     }
 
     @Override
@@ -1024,6 +1054,60 @@ public class myList<T> implements Comparable<T>, Cloneable, Iterable<T> {
     @Override
     public Iterator<T> iterator() {
         return new myListIterator<T>(this);
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public Set<Map.Entry<K, V>> entrySet() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public V get(Object key) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Set<K> keySet() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public V put(K key, V value) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> m) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public V remove(Object key) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Collection<V> values() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

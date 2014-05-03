@@ -1,6 +1,7 @@
 package REALDrummer.utils;
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.Location;
@@ -134,7 +135,7 @@ public class PlayerUtilities {
      *            is the <tt>Player</tt> that will be "frozen".
      * @see {@link #freezePlayer(String)} */
     public static void freezePlayer(Player player) {
-        freezePlayer(player.getName());
+        freezePlayer(player.getUniqueId());
     }
 
     /** This method prevents the specified <tt>Player</tt> from moving until the {@link #unfreezePlayer(String) unFreezePlayer()} method is called for the same <tt>Player</tt>.
@@ -142,7 +143,7 @@ public class PlayerUtilities {
      * @param player
      *            is the name of the <tt>Player</tt> that will be "frozen".
      * @see {@link #freezePlayer(Player)} */
-    public static void freezePlayer(String player) {
+    public static void freezePlayer(UUID player) {
         myCoreLibrary.frozen_players.add(player);
     }
 
@@ -210,13 +211,13 @@ public class PlayerUtilities {
      * @return the completed username that begins with <b><tt>name</b></tt> (<i>not</i> case-sensitive) */
     public static String getFullName(String name) {
         String full_name = null;
-        for (Player possible_owner : myCoreLibrary.server.getOnlinePlayers())
+        for (Player possible_owner : myCoreLibrary.mCL.getServer().getOnlinePlayers())
             // if this player's name also matches and it shorter, return it instead becuase if someone is using an autocompleted command, we need to make sure
             // to get the shortest name because if they meant to use the longer username, they can remedy this by adding more letters to the parameter; however,
             // if they meant to do a shorter username and the auto-complete finds the longer one first, they're screwed
             if (possible_owner.getName().toLowerCase().startsWith(name.toLowerCase()) && (full_name == null || full_name.length() > possible_owner.getName().length()))
                 full_name = possible_owner.getName();
-        for (OfflinePlayer possible_owner : myCoreLibrary.server.getOfflinePlayers())
+        for (OfflinePlayer possible_owner : myCoreLibrary.mCL.getServer().getOfflinePlayers())
             if (possible_owner.getName().toLowerCase().startsWith(name.toLowerCase()) && (full_name == null || full_name.length() > possible_owner.getName().length()))
                 full_name = possible_owner.getName();
         return full_name;
@@ -224,7 +225,7 @@ public class PlayerUtilities {
 
     public static Player getPlayer(String name) {
         Player target = null;
-        for (Player player : myCoreLibrary.server.getOnlinePlayers())
+        for (Player player : myCoreLibrary.mCL.getServer().getOnlinePlayers())
             if (player.getName().toLowerCase().startsWith(name.toLowerCase()) && (target == null || target.getName().length() > player.getName().length()))
                 target = player;
         return target;

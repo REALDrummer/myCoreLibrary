@@ -204,7 +204,7 @@ public class StringUtilities {
 
     /** This method is used to interpret the answers to questions.
      * 
-     * @param unformatted_response
+     * @param response
      *            is the raw String message that will be formatted in this message to be all lower case with no punctuation and analyzed for a "yes" or "no" answer.
      * @param current_status_line
      *            is for use with the <tt>config.txt</tt> questions only; it allows this method to default to the current status of a configuration if no answer is given to a
@@ -217,28 +217,27 @@ public class StringUtilities {
      *         <b>true</b> if the answer to the question matches one of the words or phrases in <tt>yeses</tt>, <b>false</b> if the answer to the question matches one of the
      *         words or phrases in <tt>nos</tt>. If there is no answer to the question or the answer does not match a "yes" or a "no" response, it will return <b>true</b> if
      *         <b><tt>current_status_line</tt></b> matches <b> <tt>current_status_is_true_message</tt></b> or <b>false</b> if it does not. */
-    public static Boolean readResponse(String unformatted_response, String current_status_line, String current_status_is_true_message) {
+    public static Boolean readResponse(String response, String current_status_line, String current_status_is_true_message) {
         String[] yeses =
                 { "yes", "yea", "yep", "ja", "sure", "why not", "ok", "do it", "fine", "whatever", "w/e", "very well", "accept", "tpa", "cool", "hell yeah", "hells yeah",
                         "hells yes", "come", "k ", "kk" }, nos =
-                { "no ", "nah", "nope", "no thanks", "no don't", "shut up", "ignore", "it's not", "its not", "creeper", "unsafe", "wait", "one ", "1 " };
+                { "no ", "na", "nope", "nein", "don't", "shut up", "ignore", "it's not", "its not", "creeper", "unsafe", "wait", "one ", "1 " };
         boolean said_yes = false, said_no = false;
-        String formatted_response = unformatted_response;
         // elimiate unnecessary spaces and punctuation
-        while (formatted_response.startsWith(" "))
-            formatted_response = formatted_response.substring(1);
-        while (formatted_response.endsWith(" "))
-            formatted_response = formatted_response.substring(0, formatted_response.length() - 1);
-        formatted_response = formatted_response.toLowerCase();
+        while (response.startsWith(" "))
+            response = response.substring(1);
+        while (response.endsWith(" "))
+            response = response.substring(0, response.length() - 1);
+        response = response.toLowerCase();
         // check their response
         for (String yes : yeses)
-            if (formatted_response.startsWith(yes))
+            if (response.startsWith(yes))
                 said_yes = true;
         if (said_yes)
             return true;
         else {
             for (String no : nos)
-                if (formatted_response.startsWith(no))
+                if (response.startsWith(no))
                     said_no = true;
             if (said_no)
                 return false;

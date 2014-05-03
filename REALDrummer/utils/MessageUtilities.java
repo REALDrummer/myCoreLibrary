@@ -63,7 +63,7 @@ public class MessageUtilities {
 
     public static void inform(String player, String message, long time_in_millis) {
         // if the player is online, simply send them the message
-        Player actual_player = myCoreLibrary.server.getPlayerExact(player);
+        Player actual_player = myCoreLibrary.mCL.getServer().getPlayerExact(player);
         if (actual_player != null) {
             actual_player.sendMessage(colorCode(message));
             return;
@@ -122,11 +122,11 @@ public class MessageUtilities {
      * @param exempt_ops
      *            is an optional parameter in which you may list any ops by exact username that should not receive <b><tt>message</b></tt>. */
     public static void tellOps(String message, boolean also_tell_console, String... exempt_ops) {
-        for (Player player : myCoreLibrary.server.getOnlinePlayers())
+        for (Player player : myCoreLibrary.mCL.getServer().getOnlinePlayers())
             if (player.isOp() && !contains(exempt_ops, player.getName()))
                 player.sendMessage(colorCode(message));
         if (also_tell_console)
-            myCoreLibrary.server.getConsoleSender().sendMessage(colorCode(message));
+            myCoreLibrary.mCL.getServer().getConsoleSender().sendMessage(colorCode(message));
     }
 
     public static void tellOps(String message, String... exempt_ops) {

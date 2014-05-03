@@ -2,7 +2,7 @@ package REALDrummer;
 
 import java.util.Iterator;
 
-public class myListIterator<T extends Comparable<? super T>> implements Iterator<T> {
+public class myListIterator<T> implements Iterator<T> {
     myList<T> list;
 
     public myListIterator(myList<T> list) {

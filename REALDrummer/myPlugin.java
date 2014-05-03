@@ -38,12 +38,13 @@ import static REALDrummer.utils.MessageUtilities.*;
 import static REALDrummer.utils.StringUtilities.*;
 
 public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener, Comparable<myPlugin> {
-    public static myList<myPlugin> enabled_myPlugins = new myList<myPlugin>();
+    public static myList<myPlugin> myPlugins = new myList<myPlugin>();
 
+    public myPlugin plugin = this;
     public ChatColor COLOR = ChatColor.GOLD;
-    
+
     // TODO: take into account op_command in the commands
-    
+
     private myList<mySetting> settings = new myList<mySetting>();
     private String abbreviation = null;
     private boolean auto_update = true;
@@ -52,10 +53,12 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
     // standard plugin methods
     @Override
     public void onEnable() {
+        // TODO: if myCoreLibrary isn't already enabled, enable it
+
         // register this class as a Listener, an Inquirer, and an enabled myPlugin
         getServer().getPluginManager().registerEvents(this, this);
         myQuestion.inquirers.add(this);
-        enabled_myPlugins.add(this);
+        myPlugins.add(this);
 
         // construct the abbreviation of the plugin from the capital letters of the name
         abbreviation = "";
@@ -65,7 +68,8 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
         abbreviation = 'm' + abbreviation;
 
         // load all the data
-        callPluginLoad(null, null);
+        for (Class<myData> data : myDataTypes())
+            data.load(null);
 
         // call the individual enable method specified by the plugin's code
         String[] enable_messages = myEnable();
@@ -88,7 +92,6 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
 
         // unregister this plugin as an Inquirer and an enabled myPlugin
         myQuestion.inquirers.remove(this);
-        enabled_myPlugins.remove(this);
 
         // display the disable message
         tellOps(COLOR + disable_messages[(int) (Math.random() * disable_messages.length)], true);
@@ -723,8 +726,12 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
     }
 
     // plugin-specific utilities
+    public mySetting getSetting(String key) {
+        return getSetting("\\global", key);
+    }
+
     public mySetting getSetting(String target, String key) {
-        
+
     }
 
     // object standard methods
@@ -752,4 +759,8 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
     public abstract String[] myEnable();
 
     public abstract String[] myDisable();
+
+    public abstract mySetting[] configDefaults();
+
+    public abstract Class<myData>[] myDataTypes();
 }

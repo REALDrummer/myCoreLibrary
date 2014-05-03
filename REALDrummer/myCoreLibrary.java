@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -35,11 +36,11 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import REALDrummer.utils.PlayerUtilities;
-
 import static REALDrummer.utils.ColorUtilities.*;
 import static REALDrummer.utils.MessageUtilities.*;
 import static REALDrummer.utils.StringUtilities.*;
@@ -48,7 +49,7 @@ import static REALDrummer.utils.WikiUtilities.*;
 public class myCoreLibrary extends myPlugin implements Listener {
     public static myPlugin mCL;
 
-    public static ArrayList<String> frozen_players = new ArrayList<String>();
+    public static ArrayList<UUID> frozen_players = new ArrayList<UUID>();
     public static HashMap<String, ArrayList<String>> notices = new HashMap<String, ArrayList<String>>();
 
     // enable/disable
@@ -58,7 +59,7 @@ public class myCoreLibrary extends myPlugin implements Listener {
         COLOR = ChatColor.DARK_PURPLE;
 
         // register the myQuestion class as a Listener
-        server.getPluginManager().registerEvents(new myQuestion(), this);
+        getServer().getPluginManager().registerEvents(new myQuestion(), this);
 
         return new String[] { "I'm like the Minecraft-opedia!", "I have info galore! I even have info about my info! Info is coming out of my .classes!",
                 "The Minecraft Library of Congress has got nothing on me." };
@@ -83,7 +84,6 @@ public class myCoreLibrary extends myPlugin implements Listener {
             if (event.getTo().getY() < event.getFrom().getY())
                 cancel_to.setY(event.getTo().getY());
             event.getPlayer().teleport(event.getFrom());
-            event.getPlayer().sendMessage(COLOR + "You have to put in your server password before you can move.");
         }
     }
 

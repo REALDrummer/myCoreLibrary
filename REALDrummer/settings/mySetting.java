@@ -1,21 +1,15 @@
 package REALDrummer.settings;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-
-import REALDrummer.Matchable;
 import REALDrummer.myCoreLibrary;
+import REALDrummer.myData;
+import REALDrummer.myList;
 import REALDrummer.myPlugin;
-
 import static REALDrummer.utils.ArrayUtilities.compare;
 import static REALDrummer.utils.MessageUtilities.*;
 
-public abstract class mySetting implements Comparable<mySetting>, Matchable {
+public abstract class mySetting extends myData {
+    public myList<mySetting> mySettings = new myList<mySetting>();
+
     protected String target = null, key;
     protected Object value;
 
@@ -24,11 +18,25 @@ public abstract class mySetting implements Comparable<mySetting>, Matchable {
         return key;
     }
 
+    @Override
+    public myPlugin getPlugin() {
+        return myCoreLibrary.mCL;
+    }
+
     public String getTarget() {
         return target;
     }
 
     // cast-return methods
+    public String[] arrayValue() {
+        try {
+            return (String[]) value;
+        } catch (ClassCastException exception) {
+            err(myCoreLibrary.mCL, "Someone tried to get a boolean value from a non-myBSetting mySetting!", exception, this);
+            return null;
+        }
+    }
+
     public boolean booleanValue() {
         try {
             return (boolean) value;
@@ -36,6 +44,10 @@ public abstract class mySetting implements Comparable<mySetting>, Matchable {
             err(myCoreLibrary.mCL, "Someone tried to get a boolean value from a non-myBSetting mySetting!", exception, this);
             return false;
         }
+    }
+
+    public byte optionValue() {
+        return (byte) value;
     }
 
     public int intValue() {
@@ -65,55 +77,34 @@ public abstract class mySetting implements Comparable<mySetting>, Matchable {
         }
     }
 
-    // readers and writers
-    public BufferedReader read(myPlugin plugin) {
-        File file = new File(plugin.getDataFolder(), "config.txt");
-        if (!file.exists())
-            return null;
+    // storage
+    @Override
+    public void store(myList<myData> data) {
 
-        BufferedReader in;
-        try {
-            in = new BufferedReader(new FileReader(file));
-        } catch (FileNotFoundException exception) {
-            return null;
-        }
-
-        if (read(in))
-            return in;
-        else
-            return null;
     }
-
-    public abstract boolean read(BufferedReader in);
-
-    public BufferedWriter write(myPlugin plugin) {
-        File file = new File(plugin.getDataFolder(), "config.txt");
-        BufferedWriter out;
-        try {
-            if (!file.exists())
-                file.createNewFile();
-
-            out = new BufferedWriter(new FileWriter(file));
-        } catch (IOException exception) {
-            return null;
-        }
-
-        if (write(out))
-            return out;
-        else
-            return null;
-    }
-
-    public abstract boolean write(BufferedWriter out);
 
     // overrides
     @Override
-    public int compareTo(mySetting setting) {
+    public int compareTo(myData data) {
+        if (!(data instanceof mySetting))
+            return 0;
+
+        mySetting setting = (mySetting) data;
         int target_compare = target.compareTo(setting.target);
         if (target_compare == 0)
             return key.compareTo(setting.key);
         else
             return target_compare;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof mySetting))
+            return false;
+
+        mySetting setting = (mySetting) object;
+        return (setting.key == null && key == null || setting.key != null && key != null && setting.key.equals(key))
+                && (setting.target == null && target == null || setting.target != null && target != null && setting.target.equals(target));
     }
 
     @Override

@@ -1,14 +1,16 @@
 package REALDrummer.settings;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
+import REALDrummer.myCoreLibrary;
 
 public class myISetting extends mySetting {
+    public myISetting(String key, int initial_value) {
+        this.key = key;
+        this.value = initial_value;
+    }
+
     public myISetting(String target, String key, int initial_value) {
         this.target = target;
-        this.key = key;
-        value = initial_value;
+        new myISetting(key, initial_value);
     }
 
     // getters
@@ -18,37 +20,25 @@ public class myISetting extends mySetting {
 
     // readers and writers
     @Override
-    public boolean read(BufferedReader in) {
+    public myISetting read(String save_line) {
+        myCoreLibrary.mCL.debug("reading myISetting: \"" + save_line + "\"");
+        save_line = save_line.trim();
+
+        String[] split = save_line.split(":");
+        if (split.length < 2) {
+            myCoreLibrary.mCL.debug("myISetting read failure; no \":\" found");
+            return null;
+        }
+
         try {
-            String save_line = in.readLine();
-
-            // if the save line wasn't found or isn't correctly formatted, return false to indicate an error
-            if (save_line == null || !save_line.trim().toLowerCase().startsWith(key.toLowerCase()) || !save_line.contains(":"))
-                return false;
-
-            // attempt to read the value
-            int read_value;
-            try {
-                read_value = Integer.parseInt(save_line.substring(save_line.indexOf(':') + 1));
-            } catch (NumberFormatException | StringIndexOutOfBoundsException exception) {
-                return false;
-            }
-
-            value = read_value;
-            return true;
-        } catch (IOException exception) {
-            return false;
+            return new myISetting(split[0], Integer.parseInt(split[1]));
+        } catch (NumberFormatException exception) {
+            return null;
         }
     }
 
     @Override
-    public boolean write(BufferedWriter out) {
-        try {
-            out.write("    " + (!target.equals("\\server") ? "    " : "") + key + ": " + value);
-            out.newLine();
-            return true;
-        } catch (IOException exception) {
-            return false;
-        }
+    public String write() {
+        return key + ": " + String.valueOf(getValue());
     }
 }
