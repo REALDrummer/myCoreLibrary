@@ -1,5 +1,6 @@
 package REALDrummer;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.annotation.Nonnull;
@@ -12,6 +13,7 @@ public abstract class myData implements Comparable<myData>, Matchable {
 
     public abstract String getSaveFormat();
 
+    // debug utility method
     public void debug(String message) {
         getPlugin().debug(message);
     }
@@ -22,7 +24,8 @@ public abstract class myData implements Comparable<myData>, Matchable {
         debug("loading " + data_type + " (" + getPlugin().getName() + ")...");
 
         try {
-            // TODO: load the file
+            File text_file = new File(getPlugin().getDataFolder(), data_type+".txt"), raf_file = new File(getPlugin().getDataFolder(), data_type+".raf");
+            if (raf_file.exists() && (!text_file.exists() || getPlugin().getSetting(data_type+" file format").optionValue().eq))
         } catch (IOException exception) {
             return false;
         }
@@ -37,11 +40,15 @@ public abstract class myData implements Comparable<myData>, Matchable {
     }
 
     // data-handling methods
-    public abstract myData read(@Nonnull String line);
+    public myData read(String line) {
+        
+    }
 
     public abstract void store(myList<myData> data);
 
-    public abstract String write();
+    public String write() {
+        
+    }
 
     public static String write(myData data) {
         return data.write();

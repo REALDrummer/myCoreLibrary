@@ -11,7 +11,6 @@ public abstract class mySetting extends myData {
     public myList<mySetting> mySettings = new myList<mySetting>();
 
     protected String target = null, key;
-    protected Object value;
 
     // getters
     public String getKey() {
@@ -27,52 +26,54 @@ public abstract class mySetting extends myData {
         return target;
     }
 
+    public abstract Object getValue();
+
     // cast-return methods
     public String[] arrayValue() {
         try {
-            return (String[]) value;
+            return (String[]) getValue();
         } catch (ClassCastException exception) {
-            err(myCoreLibrary.mCL, "Someone tried to get a boolean value from a non-myBSetting mySetting!", exception, this);
+            err(myCoreLibrary.mCL, "Someone tried to get a boolean getValue() from a non-myBSetting mySetting!", exception, this);
             return null;
         }
     }
 
     public boolean booleanValue() {
         try {
-            return (boolean) value;
+            return (boolean) getValue();
         } catch (ClassCastException exception) {
-            err(myCoreLibrary.mCL, "Someone tried to get a boolean value from a non-myBSetting mySetting!", exception, this);
+            err(myCoreLibrary.mCL, "Someone tried to get a boolean getValue() from a non-myBSetting mySetting!", exception, this);
             return false;
         }
     }
 
-    public byte optionValue() {
-        return (byte) value;
+    public String optionValue() {
+        return (String) getValue();
     }
 
     public int intValue() {
         try {
-            return (int) value;
+            return (int) getValue();
         } catch (ClassCastException exception) {
-            err(myCoreLibrary.mCL, "Someone tried to get an int value from a non-myISetting mySetting!", exception, this);
+            err(myCoreLibrary.mCL, "Someone tried to get an int getValue() from a non-myISetting mySetting!", exception, this);
             return -1;
         }
     }
 
     public String stringValue() {
         try {
-            return (String) value;
+            return (String) getValue();
         } catch (ClassCastException exception) {
-            err(myCoreLibrary.mCL, "Someone tried to get a String value from a non-mySSetting mySetting!", exception, this);
+            err(myCoreLibrary.mCL, "Someone tried to get a String getValue() from a non-mySSetting mySetting!", exception, this);
             return "";
         }
     }
 
     public long timeValue() {
         try {
-            return (long) value;
+            return (long) getValue();
         } catch (ClassCastException exception) {
-            err(myCoreLibrary.mCL, "Someone tried to get a long time value from a non-myTSetting mySetting!", exception, this);
+            err(myCoreLibrary.mCL, "Someone tried to get a long time getValue() from a non-myTSetting mySetting!", exception, this);
             return -1;
         }
     }
@@ -114,6 +115,6 @@ public abstract class mySetting extends myData {
 
     @Override
     public String toString() {
-        return "\"" + key + "\" for " + target + ": " + (value instanceof String ? "\"" + value + "\"" : value);
+        return "\"" + key + "\" for " + target + ": " + (getValue() instanceof String ? "\"" + getValue() + "\"" : getValue());
     }
 }
