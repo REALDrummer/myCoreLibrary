@@ -1,15 +1,14 @@
 package REALDrummer.settings;
 
+import REALDrummer.Matchable;
 import REALDrummer.myCoreLibrary;
-import REALDrummer.myData;
-import REALDrummer.myList;
 import REALDrummer.myPlugin;
-import static REALDrummer.utils.ArrayUtilities.compare;
+
+import static REALDrummer.utils.ArrayUtilities.*;
 import static REALDrummer.utils.MessageUtilities.*;
 
-public abstract class mySetting extends myData {
-    public myList<mySetting> mySettings = new myList<mySetting>();
-
+public abstract class mySetting implements Comparable<mySetting>, Matchable {
+    protected myPlugin plugin = null;
     protected String target = null, key;
 
     // getters
@@ -17,9 +16,12 @@ public abstract class mySetting extends myData {
         return key;
     }
 
-    @Override
     public myPlugin getPlugin() {
-        return myCoreLibrary.mCL;
+        return plugin;
+    }
+
+    public String getSaveFormat() {
+        return "[key]: [value]";
     }
 
     public String getTarget() {
@@ -27,6 +29,8 @@ public abstract class mySetting extends myData {
     }
 
     public abstract Object getValue();
+
+    public abstract void setValue(Object new_value);
 
     // cast-return methods
     public String[] arrayValue() {
@@ -78,24 +82,10 @@ public abstract class mySetting extends myData {
         }
     }
 
-    // storage
-    @Override
-    public void store(myList<myData> data) {
-
-    }
-
     // overrides
     @Override
-    public int compareTo(myData data) {
-        if (!(data instanceof mySetting))
-            return 0;
-
-        mySetting setting = (mySetting) data;
-        int target_compare = target.compareTo(setting.target);
-        if (target_compare == 0)
-            return key.compareTo(setting.key);
-        else
-            return target_compare;
+    public int compareTo(mySetting setting) {
+        return compare(new Object[] { target, key, plugin }, new Object[] { setting.target, setting.key, setting.plugin });
     }
 
     @Override
@@ -110,11 +100,12 @@ public abstract class mySetting extends myData {
 
     @Override
     public int matchTo(String... match_parameters) {
-        return compare(new String[] { target, key }, match_parameters);
+        return compare(new String[] { target, key, plugin.getName() }, match_parameters);
     }
 
     @Override
     public String toString() {
-        return "\"" + key + "\" for " + target + ": " + (getValue() instanceof String ? "\"" + getValue() + "\"" : getValue());
+        return "\"" + key + "\" for " + target + " (" + (plugin != null ? plugin.getName() : "null") + "): "
+                + (getValue() instanceof String ? "\"" + getValue() + "\"" : getValue() instanceof String[] ? writeArray((String[]) getValue()) : getValue());
     }
 }

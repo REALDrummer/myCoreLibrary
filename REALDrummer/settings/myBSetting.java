@@ -1,41 +1,38 @@
 package REALDrummer.settings;
 
-import static REALDrummer.utils.StringUtilities.readResponse;
-import REALDrummer.myCoreLibrary;
+import REALDrummer.myPlugin;
 
 public class myBSetting extends mySetting {
+    private boolean value;
+
     public myBSetting(String key, boolean initial_value) {
         this.key = key;
-        this.value = initial_value;
+        value = initial_value;
     }
 
-    public myBSetting(String target, String key, boolean initial_value) {
+    public myBSetting(myPlugin plugin, String target, String key, boolean initial_value) {
+        this.plugin = plugin;
         this.target = target;
         new myBSetting(key, initial_value);
     }
 
-    // getters
-    public boolean getValue() {
+    @Override
+    public Boolean getValue() {
         return (boolean) value;
     }
 
-    // readers and writers
     @Override
-    public myBSetting read(String save_line) {
-        myCoreLibrary.mCL.debug("reading myBSetting: \"" + save_line + "\"");
-        save_line = save_line.trim();
-
-        String[] split = save_line.split("?");
-        if (split.length < 2) {
-            myCoreLibrary.mCL.debug("myBSetting read failure; no \"?\" found");
-            return null;
-        }
-
-        return new myBSetting(split[0], readResponse(split[1]));
+    public void setValue(Object new_value) {
+        if (new_value instanceof Boolean)
+            value = (Boolean) new_value;
+        else
+            plugin.err("Someone tried to set the value of a myBSetting to something other than a Boolean!", "illegal value given in setValue()", "setting: " + toString(),
+                    "intended value: " + new_value);
     }
 
+    // overriden save format
     @Override
-    public String write() {
-        return key + "? " + (getValue() ? "yeah" : "nah");
+    public String getSaveFormat() {
+        return "[key]? [value]";
     }
 }

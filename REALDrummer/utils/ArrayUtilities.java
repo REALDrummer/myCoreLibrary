@@ -1,5 +1,6 @@
 package REALDrummer.utils;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 import static REALDrummer.myCoreLibrary.mCL;
@@ -51,10 +52,17 @@ public class ArrayUtilities {
     }
 
     @SafeVarargs
-    public static <T extends Comparable<? super T>> int compare(T[] initial_array, T... compare_array) {
+    public static <T> int compare(T[] initial_array, T... compare_array) {
         // first, try parsing through the lists and comparing the elements in each
         for (int i = 0; i < initial_array.length && i < compare_array.length; i++) {
-            int compare = initial_array[i].compareTo(compare_array[i]);
+            int compare;
+
+            try {
+                compare = (int) initial_array[i].getClass().getMethod("compareTo", initial_array[i].getClass()).invoke(compare_array[i]);
+            } catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
+                compare = initial_array[i].toString().compareTo(compare_array[i].toString());
+            }
+
             if (compare != 0)
                 return compare;
         }

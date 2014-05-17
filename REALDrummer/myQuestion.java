@@ -7,7 +7,6 @@ import java.util.Calendar;
 
 import javax.swing.Timer;
 
-import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,9 +15,10 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import static REALDrummer.utils.ArrayUtilities.writeArray;
+import static REALDrummer.utils.ArrayUtilities.*;
 import static REALDrummer.utils.ColorUtilities.colorCode;
 import static REALDrummer.utils.MessageUtilities.*;
+import static REALDrummer.myCoreLibrary.mCL;
 import static REALDrummer.utils.StringUtilities.readResponse;
 
 public class myQuestion implements Listener, ActionListener, Comparable<myQuestion>, Matchable {
@@ -72,9 +72,9 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
 
     public void ask(boolean relog) {
         // start the reminder/cancellation timer for this question if responder and player are available
-        Player target = myCoreLibrary.server.getPlayerExact(player);
+        Player target = mCL.getServer().getPlayerExact(player);
         if (inquirer != null && target != null) {
-            myCoreLibrary.mCL.debug("responder and player found; asking question...");
+            mCL.debug("responder and player found; asking question...");
             target.sendMessage(colorCode(relog ? relog_reminder : initial_question));
             if (timer != null && timer.isRunning())
                 timer.stop();
@@ -82,11 +82,11 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
             timer = new Timer(500, this);
             timer.start();
         } else if (inquirer == null && target == null)
-            myCoreLibrary.mCL.debug("neither responder " + inquirer + " nor player " + player + " found; postponing question...");
+            mCL.debug("neither responder " + inquirer + " nor player " + player + " found; postponing question...");
         else if (target == null)
-            myCoreLibrary.mCL.debug(player + " not found; postponing question...");
+            mCL.debug(player + " not found; postponing question...");
         else
-            myCoreLibrary.mCL.debug(inquirer + " not found; postponing question...");
+            mCL.debug(inquirer + " not found; postponing question...");
     }
 
     // listeners
@@ -109,8 +109,7 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
                 break;
             }
         if (this_inquirer == null) {
-            err(myCoreLibrary.mCL, "I couldn't find the Inquirer associated with this question!", "missing Inquirer", "question.inquirer=\"" + question.inquirer + "\"",
-                    question);
+            err(mCL, "I couldn't find the Inquirer associated with this question!", "missing Inquirer", "question.inquirer=\"" + question.inquirer + "\"", question);
             myQuestion.questions.remove(question);
             return;
         }
@@ -176,9 +175,9 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
             timer.setDelay(reminder_timing);
 
         // try to find the player to ask
-        Player target = myCoreLibrary.server.getPlayerExact(player);
+        Player target = mCL.getServer().getPlayerExact(player);
         if (target == null) {
-            myCoreLibrary.mCL.debug(player + " not found for reminder " + time_counter + " questioning; postponing question...");
+            mCL.debug(player + " not found for reminder " + time_counter + " questioning; postponing question...");
             timer.stop();
             time_counter = 0;
             return;
@@ -197,7 +196,7 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
                     break;
                 }
             if (this_inquirer == null) {
-                err(myCoreLibrary.mCL, "I couldn't find the Inquirer associated with this question!", "missing Inquirer", "inquirer=\"" + inquirer + "\"", this);
+                err(mCL, "I couldn't find the Inquirer associated with this question!", "missing Inquirer", "inquirer=\"" + inquirer + "\"", this);
                 questions.remove(this);
                 return;
             }
@@ -233,9 +232,9 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
 
     @Override
     public int matchTo(String... match_parameters) {
-        return compare()
+        return compare(new String[] { player, String.valueOf(time_asked) }, match_parameters);
     }
-    
+
     @Override
     public String toString() {
         if (!success)

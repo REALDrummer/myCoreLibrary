@@ -29,10 +29,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import REALDrummer.settings.mySetting;
-
+import REALDrummer.utils.MessageUtilities;
 import static REALDrummer.utils.ArrayUtilities.*;
 import static REALDrummer.utils.MessageUtilities.*;
 import static REALDrummer.utils.StringUtilities.*;
@@ -40,14 +41,12 @@ import static REALDrummer.utils.StringUtilities.*;
 public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener, Comparable<myPlugin> {
     public static myList<myPlugin> myPlugins = new myList<myPlugin>();
 
-    public myPlugin plugin = this;
     public ChatColor COLOR = ChatColor.GOLD;
+    public final String ABBREVIATION = 'm' + getName().replaceAll("[a-z0-9]", "");
 
     // TODO: take into account op_command in the commands
 
     private myList<mySetting> settings = new myList<mySetting>();
-    private String abbreviation = null;
-    private boolean auto_update = true;
     private myList<String> debuggers = new myList<String>();
 
     // standard plugin methods
@@ -59,13 +58,6 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
         getServer().getPluginManager().registerEvents(this, this);
         myQuestion.inquirers.add(this);
         myPlugins.add(this);
-
-        // construct the abbreviation of the plugin from the capital letters of the name
-        abbreviation = "";
-        for (char letter_in_name : getName().toCharArray())
-            if (Character.isUpperCase(letter_in_name))
-                abbreviation += letter_in_name;
-        abbreviation = 'm' + abbreviation;
 
         // load all the data
         for (Class<myData> data : myDataTypes())
@@ -100,7 +92,7 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String command, String[] parameters) {
         // /[abbreviation/name] (...)
-        if (command.equalsIgnoreCase(getName()) || command.equalsIgnoreCase(abbreviation))
+        if (command.equalsIgnoreCase(getName()) || command.equalsIgnoreCase(ABBREVIATION))
             // /[abbreviaition/name]
             if (parameters.length == 0)
                 sender.sendMessage(COLOR + "Hi! I'm " + getName() + "!\n\"" + getDescription().getDescription() + "\"\nI'm currently version " + getDescription().getVersion()
@@ -190,12 +182,12 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
                             checkForUpdates(sender);
                         else if (auto_update)
                             sender.sendMessage(COLOR + "The " + getName() + " auto-updater is currently on, so I will check for " + getName()
-                                    + " updates every time I'm enabled.\n" + "You can also use " + ChatColor.ITALIC + "/" + abbreviation + " update" + COLOR
-                                    + " to check for updates whenever you like.\n" + "Use " + ChatColor.ITALIC + "/" + abbreviation + " updater off" + COLOR
+                                    + " updates every time I'm enabled.\n" + "You can also use " + ChatColor.ITALIC + "/" + ABBREVIATION + " update" + COLOR
+                                    + " to check for updates whenever you like.\n" + "Use " + ChatColor.ITALIC + "/" + ABBREVIATION + " updater off" + COLOR
                                     + " if you do not wish to check for updates automatically.");
                         else
-                            sender.sendMessage(COLOR + "The " + getName() + " auto-updater is currently off, but you can use " + ChatColor.ITALIC + "/" + abbreviation
-                                    + " update" + COLOR + " whenever you like to check for updates.\n" + "Use " + ChatColor.ITALIC + "/" + abbreviation + " updater on"
+                            sender.sendMessage(COLOR + "The " + getName() + " auto-updater is currently off, but you can use " + ChatColor.ITALIC + "/" + ABBREVIATION
+                                    + " update" + COLOR + " whenever you like to check for updates.\n" + "Use " + ChatColor.ITALIC + "/" + ABBREVIATION + " updater on"
                                     + COLOR + " if you want to automatically check for updates whenever this plugin is enabled (highly recommended!).");
                     else if (parameters[2].equalsIgnoreCase("off"))
                         if (auto_update) {
@@ -259,12 +251,24 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
                 player.sendMessage(COLOR + message);
     }
 
-    public boolean isAdmin(CommandSender sender) {
-        return sender instanceof ConsoleCommandSender || sender.hasPermission(getName().toLowerCase() + ".admin");
+    public void err(String message, Throwable exception, Object... additional_information) {
+        MessageUtilities.err(plugin, message, exception, exception.getClass().getSimpleName(), false, additional_information);
     }
 
-    public String getAbbreviation() {
-        return abbreviation;
+    public void err(String message, String issue, Object... additional_information) {
+        MessageUtilities.err(plugin, message, new NullPointerException(), issue, true, additional_information);
+    }
+
+    public void tellOps(String message, String... exempt_ops) {
+        tellOps(COLOR + message, true, exempt_ops);
+    }
+
+    public void tellOps(String message, boolean also_tell_console, String... exempt_ops) {
+        tellOps(COLOR + message, also_tell_console, exempt_ops);
+    }
+
+    public boolean isAdmin(CommandSender sender) {
+        return sender instanceof ConsoleCommandSender || sender.hasPermission(getName().toLowerCase() + ".admin");
     }
 
     // command methods
@@ -488,7 +492,7 @@ public abstract class myPlugin extends JavaPlugin implements Inquirer, Listener,
                     // write the first entry as the auto-update setting if the data type is the config
                     BufferedWriter out = new BufferedWriter(new FileWriter(file));
                     // start the file with a reminder to use /[plugin name] load [data_type]
-                    out.write("Remember to use \"/" + abbreviation + " load " + load_settings.data_type() + "\" to load your changes to this file to the server when you're done!");
+                    out.write("Remember to use \"/" + ABBREVIATION + " load " + load_settings.data_type() + "\" to load your changes to this file to the server when you're done!");
                     out.newLine();
                     // TODO: remove after making a standard config-loading function
                     // if the file is the configuration file, follow the command reminder with the auto-update configuration question
