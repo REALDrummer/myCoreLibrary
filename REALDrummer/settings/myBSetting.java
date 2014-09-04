@@ -1,6 +1,6 @@
 package REALDrummer.settings;
 
-import REALDrummer.myPlugin;
+import static REALDrummer.utils.StringUtilities.readResponse;
 
 public class myBSetting extends mySetting {
     private boolean value;
@@ -10,8 +10,7 @@ public class myBSetting extends mySetting {
         value = initial_value;
     }
 
-    public myBSetting(myPlugin plugin, String target, String key, boolean initial_value) {
-        this.plugin = plugin;
+    public myBSetting(String target, String key, boolean initial_value) {
         this.target = target;
         new myBSetting(key, initial_value);
     }
@@ -22,17 +21,25 @@ public class myBSetting extends mySetting {
     }
 
     @Override
-    public void setValue(Object new_value) {
-        if (new_value instanceof Boolean)
-            value = (Boolean) new_value;
-        else
-            plugin.err("Someone tried to set the value of a myBSetting to something other than a Boolean!", "illegal value given in setValue()", "setting: " + toString(),
-                    "intended value: " + new_value);
+    public boolean readValue(String read_value) {
+        Boolean read_answer = readResponse(read_value);
+        if (read_answer == null)
+            return false;
+
+        value = read_answer;
+        return true;
     }
 
-    // overriden save format
     @Override
-    public String getSaveFormat() {
-        return "[key]? [value]";
+    public boolean setValue(Object new_value) {
+        if (new_value instanceof Boolean) {
+            value = (Boolean) new_value;
+            return true;
+        }
+        return false;
+    }
+
+    public String writeValue() {
+        return key + "? " + (value ? "yes" : "no");
     }
 }

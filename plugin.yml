@@ -4,18 +4,43 @@ version: 0
 description: >
              This is like the Minecraft Bukkit developer's Library of Congress.
 commands:
-   myCoreLibrary:
-      aliases: [mCL]
-      description: This command lets admins save and load the configurations and toggle the auto-updater.
+   mCL:
+      aliases: []
+      description: This command provides access to standard myPlugin admin commands and can also be used to specify the target myPlugin in the case of interfering commands with the same name.
       usage: |
-           /<command> ("load"/"save"/"update") ("on"/"off")
+           /<command> ("debug"/"update"/"updater "("on"/"off")/"load "(data_type)"/"save " (data_type)/command)
+   myCoreLibrary:
+      aliases: []
+      description: This command provides access to standard myPlugin admin commands and can also be used to specify the target myPlugin in the case of interfering commands with the same name.
+      usage: |
+           /<command> ("debug"/"update"/"updater "("on"/"off")/"load "(data_type)"/"save " (data_type)/command)
    id:
       aliases: [ids]
       description: This command outputs the item name and I.D. that coordinate with the item name or I.D. given.
       usage: |
-           /<command> (query)
+           /<command> (query...)
    recipe:
       aliases: [craft]
       description: This command outputs the crafting recipe for the item given (by I.D. or by name).
       usage: |
-           /<command> (query)
+           /<command> (query...)
+   unflaggedparsingoptionaltest:
+      aliases: []
+      description: TEMP
+      usage: |
+           /<command> (ufl-op-parse S)
+   flaggedparsingoptionaltest:
+      aliases: []
+      description: TEMP
+      usage: |
+           /<command> (--fl-op-parse S)
+   unflaggednonparsingoptionaltest:
+      aliases: []
+      description: TEMP
+      usage: |
+           /<command> (ufl-op-nonparse S)
+   flaggednonparsingoptionaltest:
+      aliases: []
+      description: TEMP
+      usage: |
+           /<command> (--fl-op-nonparse S)

@@ -2,7 +2,8 @@ package REALDrummer.utils;
 
 import org.bukkit.ChatColor;
 
-import REALDrummer.Wiki;
+import static REALDrummer.myWiki.*;
+import static REALDrummer.utils.ListUtilities.contains;
 
 public class ColorUtilities {
     /** This method actiavtes any color codes in a given String and returns the message with color codes eliminated from the text and colors added to the text. This method is
@@ -26,16 +27,19 @@ public class ColorUtilities {
         text = "&f" + text;
         // put color codes in the right order if they're next to each other
         for (int i = 0; i < text.length() - 3; i++)
-            if (isColorCode(text.substring(i, i + 2), false, true) && isColorCode(text.substring(i + 2, i + 4), true, true))
+            if (isColorCode(text.substring(i, i + 2), ColorCodeType.FORMATTING) && isColorCode(text.substring(i + 2, i + 4), ColorCodeType.COLOR))
                 text = text.substring(0, i) + text.substring(i + 2, i + 4) + text.substring(i, i + 2) + text.substring(i + 4);
+
         // replace all anti color codes with non antis
         String current_color_code = "";
         for (int i = 0; i < text.length() - 1; i++) {
-            if (isColorCode(text.substring(i, i + 2), null, true))
+            // if it's not an anti-color code, use it to keep track of the current color code
+            if (isColorCode(text.substring(i, i + 2), ColorCodeType.BASIC, ColorCodeType.CONVERTED))
                 current_color_code = current_color_code + text.substring(i, i + 2);
-            else if (isColorCode(text.substring(i, i + 2), null, false)) {
-                while (text.length() > i + 2 && isColorCode(text.substring(i, i + 2), null, false)) {
-                    current_color_code = current_color_code.replaceAll("&" + text.substring(i + 1, i + 2), "");
+            // if it's an anti-color code, replace it with the current color code
+            else if (isColorCode(text.substring(i, i + 2), ColorCodeType.ANTI)) {
+                while (text.length() > i + 2 && isColorCode(text.substring(i, i + 2), ColorCodeType.ANTI)) {
+                    current_color_code = current_color_code.replaceAll("[&\u00A7]" + text.toCharArray()[i + 1], "");
                     if (current_color_code.equals(""))
                         current_color_code = "&f";
                     text = text.substring(0, i) + text.substring(i + 2);
@@ -43,8 +47,8 @@ public class ColorUtilities {
                 text = text.substring(0, i) + current_color_code + text.substring(i);
             }
         }
-        String colored_text = ChatColor.translateAlternateColorCodes('&', text);
-        return colored_text;
+
+        return ChatColor.translateAlternateColorCodes('&', text);
     }
 
     /** This method can remove all color codes from a given String, including anti-color codes, which are not recognized by Bukkit's <tt>ChatColor.stripColor()</tt> method.
@@ -53,10 +57,10 @@ public class ColorUtilities {
      *            is the String that must have its color codeds removed.
      * @return <b><tt>text</b></tt> without color codes. */
     public static String decolor(String text) {
-        if (!text.contains("&") && !text.contains("%"))
+        if (!text.contains("&") && !text.contains("%") && !text.contains("\u00A7"))
             return text;
         for (int i = 0; i < text.length() - 2; i++) {
-            if (isColorCode(text.substring(i, i + 2), null, null)) {
+            if (isColorCode(text.substring(i, i + 2))) {
                 if (i + 2 < text.length())
                     text = text.substring(0, i) + text.substring(i + 2);
                 else
@@ -67,35 +71,64 @@ public class ColorUtilities {
         return text;
     }
 
+    // old isColorCode Boolean parameters: non_formatting, non_anti
     /** This method can determine whether or not a String is a color code or not and what type or color code it is (formatting vs. color color codes and/or normal vs.
      * anti-color codes).
      * 
      * @param text
      *            is the two-character String that this method analyzes to see whether or not it is a color code.
-     * @param non_formatting
-     *            is a Boolean that can have three values. <b>true</b> means that the color code must be non-formatting, e.g. "&a" (light green) or "&4" (dark red).
-     *            <b>false</b> means that the color code must be formatting, e.g. "&k" for magic or "&l" for bold. <b>null</b> means that it can be either a formatting or
-     *            non-formatting color code to return true.
-     * @param non_anti
-     *            works similarly to non_formatting, but for anti-color codes vs. normal color codes. "true" means that the color code must <i>not</i> be an anti-color code.
-     * @return true if the String is a color code and the other standards set by the Boolean parameters are met; false otherwise */
-    public static Boolean isColorCode(String text, Boolean non_formatting, Boolean non_anti) {
-        if (!text.startsWith("&") && !text.startsWith("%"))
+     * @param types
+     *            is a list of {@link ColorCodeType}s that should be searched for.
+     * @return <b>true</b> if the <tt>String</tt> is a color code type that matches <b><tt>types</b></tt>; <b>false</b> otherwise. */
+    public static boolean isColorCode(String text, ColorCodeType... types) {
+        char type_marker = text.toCharArray()[0], color_marker = text.toCharArray()[1];
+
+        // if type_marker isn't any kind of accepted color code indicator char, return false
+        if (type_marker != '&' && type_marker != '%' && type_marker != ChatColor.COLOR_CHAR)
             return false;
-        if (non_anti != null)
-            if (non_anti && text.startsWith("%"))
+
+        // figure out the color code's secondary type (color vs. formatting)
+        boolean color_color_code = false, formatting_color_code = false;
+
+        // first, check the second char to see if the second char is a color color code
+        for (char color_char : COLOR_COLOR_CODE_CHARS)
+            if (color_char == color_marker) {
+                color_color_code = true;
+                break;
+            }
+
+        // if it wasn't a color color code, see if it's a formatting color code
+        if (!color_color_code) {
+            for (char color_char : FORMATTING_COLOR_CODE_CHARS)
+                if (color_char == color_marker) {
+                    formatting_color_code = true;
+                    break;
+                }
+
+            // if it wasn't a color color code and it wasn't a formatting color code, it's not any kind of color code
+            if (!formatting_color_code)
                 return false;
-            else if (!non_anti && text.startsWith("&"))
-                return false;
-        if (non_formatting == null || non_formatting)
-            for (char color_color_code_char : Wiki.COLOR_COLOR_CODE_CHARS)
-                if (text.toCharArray()[1] == color_color_code_char)
-                    return true;
-        if (non_formatting == null || !non_formatting)
-            for (char formatting_color_code_char : Wiki.FORMATTING_COLOR_CODE_CHARS)
-                if (text.toCharArray()[1] == formatting_color_code_char)
-                    return true;
-        return false;
+        }
+
+        /* if types is empty, we can treat it as "any ColorCodeType is acceptable", so since we already know that it's some kind of color code by now, if types is empty, just
+         * return true */
+        if (types.length == 0)
+            return true;
+
+        // now check the secondary color code type (formatting vs. color) against the primary type (anti vs. converted vs. unconverted)
+        if (type_marker == '&')
+            return contains(types, ColorCodeType.BASIC) || color_color_code && contains(types, ColorCodeType.BASIC_COLOR) || formatting_color_code
+                    && contains(types, ColorCodeType.BASIC_FORMATTING);
+        else if (type_marker == '%')
+            return contains(types, ColorCodeType.ANTI) || color_color_code && contains(types, ColorCodeType.ANTI_COLOR) || formatting_color_code
+                    && contains(types, ColorCodeType.ANTI_FORMATTING);
+        else
+            return contains(types, ColorCodeType.CONVERTED) || color_color_code && contains(types, ColorCodeType.CONVERTED_COLOR) || formatting_color_code
+                    && contains(types, ColorCodeType.CONVERTED_FORMATTING);
+    }
+
+    public enum ColorCodeType {
+        CONVERTED_COLOR, CONVERTED_FORMATTING, BASIC_COLOR, BASIC_FORMATTING, ANTI_COLOR, ANTI_FORMATTING, CONVERTED, BASIC, ANTI, COLOR, FORMATTING;
     }
 
 }

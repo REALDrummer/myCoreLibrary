@@ -1,6 +1,6 @@
 package REALDrummer;
 
-public class Wiki {
+public class myWiki {
     // material names
     public static final String[][] ENCHANTMENT_IDS = {
             { "Protection", "Environmental Protection", "normal Protection", "regular Protection", "general Protection" },

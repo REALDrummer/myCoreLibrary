@@ -3,26 +3,26 @@ package REALDrummer.utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 
-import REALDrummer.myCoreLibrary;
-
+import REALDrummer.interfaces.Matchable;
 import static REALDrummer.myCoreLibrary.*;
-import static REALDrummer.utils.ArrayUtilities.*;
-import static REALDrummer.utils.MessageUtilities.*;
+import static REALDrummer.utils.ListUtilities.*;
 
 public class StringUtilities {
-    public static final String[] BORDERS = { "[]", "\\/", "\"*", "_^", "-=", ":;", "&%", "#@", ",.", "<>", "~$", ")(", "+-", "|o" };
+    public static final String[] BORDERS = { "[]", "\\/", "\"*", "_^", "-=", ":;", "&%", "#@", ",.", "<>", "~$", ")(", "+-", "|o" }, YESES = { "yes", "yea", "yep", "ja",
+            "sure", "why not", "ok", "do it", "fine", "whatever", "w/e", "very well", "accept", "tpa", "cool", "hell yeah", "hells yeah", "hells yes", "come", "k ", "kk",
+            "true", "on" }, NOS = { "no ", "na", "nope", "nein", "don't", "shut up", "ignore", "it's not", "its not", "creeper", "unsafe", "wait", "one ", "1 ", "false",
+            "off" };
 
     public static String aOrAn(String message) {
         String check = message;
         check = check.toLowerCase();
         while (check.startsWith("{") || check.startsWith("[") || check.startsWith("/") || check.startsWith("\\") || check.startsWith("\n") || check.startsWith("\t")
-                || check.startsWith("(") || check.startsWith("\"") || check.startsWith("\'"))
+                || check.startsWith("(") || check.startsWith("\"") || check.startsWith("'") || check.startsWith(" "))
             check = check.substring(1);
         if (check.startsWith("a") || check.startsWith("e") || check.startsWith("i") || check.startsWith("o") || check.startsWith("u") || check.startsWith("1")
                 || check.startsWith("8"))
@@ -38,6 +38,15 @@ public class StringUtilities {
         return border;
     }
 
+    public static String capitalize(String to_capitalize) {
+        if (to_capitalize == null || to_capitalize.equals(""))
+            return to_capitalize;
+        else if (to_capitalize.length() == 1)
+            return to_capitalize.toUpperCase();
+        else
+            return to_capitalize.substring(0, 1).toUpperCase() + to_capitalize.substring(1);
+    }
+
     public static boolean isBorder(String test) {
         if (test.length() == 40) {
             for (String border : BORDERS)
@@ -51,6 +60,151 @@ public class StringUtilities {
         return false;
     }
 
+    public static boolean isNumber(String test) {
+        try {
+            Double.parseDouble(test);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static int match(Object object, String... match_parameters) {
+        if (match_parameters.length == 0)
+            return match(object, null);
+        // null can be matched to "\null"; otherwise, null is considered the lesser value
+        else if (object == null)
+            if (match_parameters[0] == null || match_parameters[0].equals("\\null"))
+                return 0;  // since null is a wild card, \null can be used to actually search for null specifically
+            else
+                return -1;  // null is < everything else
+        // if it's Matchable, simply call its matchTo() method
+        else if (object instanceof Matchable)
+            return ((Matchable) object).matchTo(match_parameters);
+        // if it's not Matchable and the match parameters are null, just return 0 since null is a "wild card"
+        else if (match_parameters[0] == null)
+            return 0;
+        // match Strings by case-insensitive autocompletion
+        else if (object instanceof String)
+            if (((String) object).length() < match_parameters[0].length())
+                return -1;
+            else
+                return ((String) object).substring(0, match_parameters[0].length()).compareToIgnoreCase(match_parameters[0]);
+        // match Booleans against "T" vs. "F"
+        else if (object instanceof Boolean)
+            return ((Boolean) object) ^ Character.toUpperCase(match_parameters[0].charAt(0)) == 'T' ? 1 : 0;
+        // match integers by their difference
+        else if (object instanceof Byte)
+            try {
+                return ((Byte) object) - Byte.parseByte(match_parameters[0]);
+            } catch (NumberFormatException e) {
+                return ((Byte) object);
+            }
+        else if (object instanceof Short)
+            try {
+                return ((Short) object) - Short.parseShort(match_parameters[0]);
+            } catch (NumberFormatException e) {
+                return ((Short) object);
+            }
+        else if (object instanceof Integer)
+            try {
+                return ((Integer) object) - Integer.parseInt(match_parameters[0]);
+            } catch (NumberFormatException e) {
+                return ((Integer) object);
+            }
+        else if (object instanceof Long)
+            try {
+                return (int) (((Long) object) - Long.parseLong(match_parameters[0]));
+            } catch (NumberFormatException e) {
+                return (int) ((Long) object).longValue();
+            }
+        // match floating point numbers by their truncated difference
+        else if (object instanceof Float)
+            try {
+                return (int) (((Float) object) - Float.parseFloat(match_parameters[0]));
+            } catch (NumberFormatException e) {
+                return (int) ((Float) object).floatValue();
+            }
+        else if (object instanceof Double)
+            try {
+                return (int) (((Double) object) - Double.parseDouble(match_parameters[0]));
+            } catch (NumberFormatException e) {
+                return (int) ((Double) object).doubleValue();
+            }
+        // match Locations by their block-coordinate writeLocation() outputs
+        else if (object instanceof Location)
+            return writeLocation((Location) object, false).compareTo(
+                    combine(match_parameters, " ")/* remove decimal places */.replaceAll(".\\d*,", ",").replaceAll(".\\d*\\)", ")"));
+        // if all else fails, try to match their toString() outputs
+        else
+            return object.toString().compareTo(combine(match_parameters, " "));
+    }
+
+    public static int match(Object[] objects, String[] match_parameters) {
+        // NOTE: this method has to be separate from match(Object[], String[]...) because of differences between String[] and String[]...
+        if (match_parameters.length == 0)
+            return 0;
+
+        // compare the objects given until one does not match
+        for (int i = 0; i < objects.length && i < match_parameters.length; i++) {
+            int comparison = match(objects[i], match_parameters[i]);
+            if (comparison != 0)
+                return comparison;
+        }
+
+        // if all of the objects matched, return 0
+        return 0;
+    }
+
+    public static int match(Object[] objects, String[]... match_parameters) {
+        // NOTE: this method has to be separate from match(Object[], String[]) because of differences between String[] and String[]...
+        if (match_parameters.length == 0)
+            return 0;
+
+        // compare the objects given until one does not match
+        for (int i = 0; i < objects.length && i < match_parameters.length; i++) {
+            int comparison = match(objects[i], match_parameters[i]);
+            if (comparison != 0)
+                return comparison;
+        }
+
+        // if all of the objects matched, return 0
+        return 0;
+    }
+
+    public static HashMap<String, String> readData(String format, String data) {
+        return readData(format, data, true);
+    }
+
+    public static HashMap<String, String> readData(String format, String data, boolean display_errors) {
+        HashMap<String, String> results = new HashMap<String, String>();
+        try {
+            while (format.contains("[") && format.contains("]")) {
+                int key_begin = format.indexOf('['), key_end = format.indexOf('[') + format.substring(format.indexOf('[')).indexOf(']');
+                String key = format.substring(key_begin + 1, key_end), value =
+                        data.substring(key_begin, data.indexOf(key_end + 1, key_end + data.substring(key_end).indexOf('[') + 1));
+                if (!key.contains("/~"))
+                    results.put(key, value);
+                else {
+                    String true_value = substring(key, "\"", "\""), false_value = substring(key.substring(key.indexOf("/~")), "\"", "\"");
+                    if (value.toLowerCase().startsWith(true_value.toLowerCase()))
+                        results.put(key, "true");
+                    else if (value.toLowerCase().startsWith(false_value.toLowerCase()))
+                        results.put(key, "false");
+                    else
+                        mCL.err("This value didn't match either possibility in this boolean key in this verbose data line!", "key=\"" + key + "\"", "value=\"" + value + "\"",
+                                "format=\"" + format + "\"", "data=\"" + data + "\"", "data collected so far: " + results);
+                }
+            }
+        } catch (Exception exception) {
+            if (display_errors)
+                mCL.err("This data line wasn't formatted correctly according to the given format!", exception, "format=\"" + format + "\"", "data=\"" + data + "\"",
+                        "data collected so far: " + results);
+            return null;
+        }
+        return results;
+    }
+
     public static Location readLocation(String string, boolean display_errors) {
         // location format: ([x], [y], [z]) (facing ([pitch], [yaw])) in "[world]"
         String[] temp = string.split(", ");
@@ -61,28 +215,24 @@ public class StringUtilities {
                 pitch = Float.parseFloat(tempS.split(", ")[0]);
                 yaw = Float.parseFloat(tempS.split(", ")[1]);
             }
-            World world = myCoreLibrary.mCL.getServer().getWorld(string.substring(string.indexOf("\""), string.length() - 1));
+            World world = mCL.getServer().getWorld(string.substring(string.indexOf("\""), string.length() - 1));
             if (world == null) {
-                if (display_errors) {
-                    tellOps(ChatColor.DARK_RED + "I couldn't read the world name on this location String!", true);
-                    tellOps(ChatColor.DARK_RED + "location: \"" + ChatColor.WHITE + string + ChatColor.DARK_RED + "\"", true);
-                    tellOps(ChatColor.DARK_RED + "I read \"" + ChatColor.WHITE + string.substring(string.indexOf("\"")) + ChatColor.DARK_RED + "\" as the world name!", true);
-                }
+                if (display_errors)
+                    mCL.err("I couldn't read the world name on this location String!", "unidentified world name", string, "world name=\""
+                            + string.substring(string.indexOf("\"")) + "\"");
                 return null;
             }
             return new Location(world, Double.parseDouble(temp[0].substring(1)), Double.parseDouble(temp[1]), Double.parseDouble(temp[2].substring(0, temp[2].indexOf(")"))),
                     yaw, pitch);
         } catch (NumberFormatException exception) {
-            if (display_errors) {
-                tellOps(ChatColor.DARK_RED + "I couldn't read this location message properly!", true);
-                tellOps(ChatColor.DARK_RED + "location: \"" + ChatColor.WHITE + string + ChatColor.DARK_RED + "\"", true);
-            }
+            if (display_errors)
+                mCL.err("I couldn't read this location message properly!", "unrecognized location format", string);
             return null;
         }
     }
 
     public static HashMap<String, String> readParameters(String format, String[] parameters, byte... indices) {
-        // TODO: allow spaces in parameter names
+        // TODO: replace with myFlags
         /* [?] = required parameter
          * 
          * (?) = optional parameter
@@ -133,7 +283,7 @@ public class StringUtilities {
                 options = format_parts[j].split(",");
             else if (format_parts[j].contains("/"))
                 options = format_parts[j].split("/");
-            mCL.debug(options.length + " option(s) found...");
+            mCL.debug(options.length + " option(s) found: " + writeArray(options));
 
             boolean fits = false;
             // first, see if the current parameter fits the current format part; skip to the next format part if the current format part is optional and doesn't fit
@@ -150,7 +300,11 @@ public class StringUtilities {
                 }
                 mCL.debug("required starter=\"" + required_starter + "\"; required terminator=\"" + required_terminator + "\"");
 
-                boolean specific = required_starter.length() != 0 && (!required_starter.equals(required_terminator) || option.split("\"").length > 3);
+                /* determine whether or not the option is "specific", meaning it requires a starting and/or terminating String; note that it isn't specific if required_starter
+                 * is the same as required_terminator and there are two or less double quotes because that means instead that it's a simple String parameter like ("debug") */
+                boolean specific =
+                        (required_starter.length() > 0 || required_terminator.length() > 0)
+                                && (!required_starter.equals(required_terminator) || option.split("\"").length > 3);
 
                 String option_name =
                         option.substring(1 + (specific && required_starter.length() > 0 ? 2 + required_starter.length() : 0), option.length() - 1
@@ -218,10 +372,6 @@ public class StringUtilities {
      *         words or phrases in <tt>nos</tt>. If there is no answer to the question or the answer does not match a "yes" or a "no" response, it will return <b>true</b> if
      *         <b><tt>current_status_line</tt></b> matches <b> <tt>current_status_is_true_message</tt></b> or <b>false</b> if it does not. */
     public static Boolean readResponse(String response, String current_status_line, String current_status_is_true_message) {
-        String[] yeses =
-                { "yes", "yea", "yep", "ja", "sure", "why not", "ok", "do it", "fine", "whatever", "w/e", "very well", "accept", "tpa", "cool", "hell yeah", "hells yeah",
-                        "hells yes", "come", "k ", "kk" }, nos =
-                { "no ", "na", "nope", "nein", "don't", "shut up", "ignore", "it's not", "its not", "creeper", "unsafe", "wait", "one ", "1 " };
         boolean said_yes = false, said_no = false;
         // elimiate unnecessary spaces and punctuation
         while (response.startsWith(" "))
@@ -230,13 +380,13 @@ public class StringUtilities {
             response = response.substring(0, response.length() - 1);
         response = response.toLowerCase();
         // check their response
-        for (String yes : yeses)
+        for (String yes : YESES)
             if (response.startsWith(yes))
                 said_yes = true;
         if (said_yes)
             return true;
         else {
-            for (String no : nos)
+            for (String no : NOS)
                 if (response.startsWith(no))
                     said_no = true;
             if (said_no)
@@ -305,7 +455,7 @@ public class StringUtilities {
      * 
      * @param written
      *            is the String to be translated into a time in milliseconds (ms).
-     * @return the time given by the String <b><tt>written</b></tt> translated into milliseconds (ms). */
+     * @return the time given by the String <b><tt>written</b></tt> translated into milliseconds (ms) or -1 if the method was unable to read the given <tt>String</tt>. */
     public static long readTime(String written) {
         long time = 0;
         String[] temp = written.split(" ");
@@ -358,7 +508,8 @@ public class StringUtilities {
                         // since a double of, say, 1.0 is actually 0.99999..., (int)ing it will reduce exact numbers by one, so I added 0.1 to it to avoid that.
                         time = time + (int) (amount * factor + 0.1);
                 } catch (NumberFormatException e2) {
-                    //
+                    mCL.err("I couldn't read this time!", e2, "written time=\"" + written + "\"");
+                    return -1;
                 }
                 words.remove(0);
             }
@@ -394,6 +545,15 @@ public class StringUtilities {
             }
         }
         return text;
+    }
+
+    public static String substring(String string, String beginning, String end) {
+        if (!string.contains(beginning) || !string.contains(end) || string.indexOf(beginning) >= string.indexOf(end))
+            return null;
+        else {
+            String after_beginning = string.substring(string.indexOf(beginning) + beginning.length());
+            return after_beginning.substring(0, after_beginning.indexOf(end));
+        }
     }
 
     public static String writeLocation(Location location, boolean use_block_coordinates, boolean include_pitch_and_yaw) {

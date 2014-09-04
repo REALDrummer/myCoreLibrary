@@ -1,27 +1,30 @@
 package REALDrummer.utils;
 
-import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
-import REALDrummer.myCoreLibrary;
-import REALDrummer.Wiki;
-
+import static REALDrummer.myWiki.*;
 import static REALDrummer.myCoreLibrary.mCL;
-import static REALDrummer.utils.ArrayUtilities.*;
+import static REALDrummer.utils.ListUtilities.*;
 import static REALDrummer.utils.StringUtilities.*;
 import static REALDrummer.utils.WikiUtilities.*;
 
+/** This static singleton class contains a plethora of utilities related to {@link Player}s and {@link Block}s, including methods to convert between total experience and
+ * experience levels, case-insensitively autocomplete a player's name, and calculate the block that a given {@link Player} is pointing at.
+ * 
+ * @author connor */
 public class PlayerUtilities {
+    /** This {@link HashMap} maps the {@link UUID}s of all the players who have ever joined this server to their last known usernames (i.e. the username they had the last time
+     * that they were on this server). If a player logs onto the server with a known username but a different {@link UUID}, then the username associate with that username's
+     * old {@link} will be replaced with the <tt>String</tt> form of said old {@link UUID}, preventing the acquisition of the previous username owner's data through
+     * "username sniping". */
+    public static HashMap<UUID, String> players = new HashMap<UUID, String>();
+
     /** This enum Object is to be used in specifying different parameters for the {@link #getTargetBlock(Player player, BlockSearch... parameters) getTargetBlock()} method.
      * 
      * @see {@link #getTargetBlock(Player player, BlockSearch... parameters) getTargetBlock()}; {@link BlockSearch#NON_SOLID}, {@link BlockSearch#LIQUID} ,
@@ -129,24 +132,6 @@ public class PlayerUtilities {
 
     }
 
-    /** This method prevents the specified <tt>Player</tt> from moving until the {@link #unfreezePlayer(Player) unFreezePlayer()} method is called for the same <tt>Player</tt>.
-     * 
-     * @param player
-     *            is the <tt>Player</tt> that will be "frozen".
-     * @see {@link #freezePlayer(String)} */
-    public static void freezePlayer(Player player) {
-        freezePlayer(player.getUniqueId());
-    }
-
-    /** This method prevents the specified <tt>Player</tt> from moving until the {@link #unfreezePlayer(String) unFreezePlayer()} method is called for the same <tt>Player</tt>.
-     * 
-     * @param player
-     *            is the name of the <tt>Player</tt> that will be "frozen".
-     * @see {@link #freezePlayer(Player)} */
-    public static void freezePlayer(UUID player) {
-        myCoreLibrary.frozen_players.add(player);
-    }
-
     /** This method returns the data value that should correspond to the top of a proper door given the bottom <tt>Block</tt> of the door.
      * 
      * @param bottom_door_block
@@ -193,13 +178,6 @@ public class PlayerUtilities {
         return 8;
     }
 
-    public static Map<Enchantment, Integer> getEnchantments(ItemStack item) {
-        if (item.getType() != Material.ENCHANTED_BOOK)
-            return item.getEnchantments();
-        else
-            return ((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants();
-    }
-
     /** This is a simple auto-complete method that can take the first few letters of a player's name and return the full name of the player. It prioritizes in two ways:
      * <b>1)</b> it gives online players priority over offline players and <b>2)</b> it gives shorter names priority over longer usernames because if a player tries to
      * designate a player and this plugin returns a different name than the user meant that starts with the same letters, the user can add more letters to get the longer
@@ -210,25 +188,15 @@ public class PlayerUtilities {
      *            is the String that represents the first few letters of a username that needs to be auto-completed.
      * @return the completed username that begins with <b><tt>name</b></tt> (<i>not</i> case-sensitive) */
     public static String getFullName(String name) {
-        String full_name = null;
-        for (Player possible_owner : myCoreLibrary.mCL.getServer().getOnlinePlayers())
-            // if this player's name also matches and it shorter, return it instead becuase if someone is using an autocompleted command, we need to make sure
-            // to get the shortest name because if they meant to use the longer username, they can remedy this by adding more letters to the parameter; however,
-            // if they meant to do a shorter username and the auto-complete finds the longer one first, they're screwed
-            if (possible_owner.getName().toLowerCase().startsWith(name.toLowerCase()) && (full_name == null || full_name.length() > possible_owner.getName().length()))
-                full_name = possible_owner.getName();
-        for (OfflinePlayer possible_owner : myCoreLibrary.mCL.getServer().getOfflinePlayers())
-            if (possible_owner.getName().toLowerCase().startsWith(name.toLowerCase()) && (full_name == null || full_name.length() > possible_owner.getName().length()))
-                full_name = possible_owner.getName();
-        return full_name;
+        for (String player_name : players.values())
+            if (player_name.toLowerCase().startsWith(name.toLowerCase()))
+                return player_name;
+
+        return null;
     }
 
-    public static Player getPlayer(String name) {
-        Player target = null;
-        for (Player player : myCoreLibrary.mCL.getServer().getOnlinePlayers())
-            if (player.getName().toLowerCase().startsWith(name.toLowerCase()) && (target == null || target.getName().length() > player.getName().length()))
-                target = player;
-        return target;
+    public static String getName(UUID player) {
+        return players.get(player);
     }
 
     public static Block getOtherHalfOfLargeChest(Block first_half) {
@@ -241,8 +209,20 @@ public class PlayerUtilities {
         return null;
     }
 
+    public static Player getPlayer(String name) {
+        return mCL.getServer().getPlayer(getFullName(name));
+    }
+
     public static Block getTargetBlock(Player player) {
-        return getTargetBlock(player, BlockSearch.SOLID, BlockSearch.LIQUID);
+        return getTargetBlock(player, 500, BlockSearch.SOLID, BlockSearch.LIQUID);
+    }
+
+    public static Block getTargetBlock(Player player, int max_distance) {
+        return getTargetBlock(player, max_distance, BlockSearch.SOLID, BlockSearch.LIQUID);
+    }
+
+    public static Block getTargetBlock(Player player, BlockSearch... parameters) {
+        return getTargetBlock(player, 500, parameters);
     }
 
     /** This method uses the given <tt>Player</tt>'s location to calculate the block that they're pointing at. It works like the <tt>Player.getTargetBlock()</tt> method from
@@ -252,6 +232,8 @@ public class PlayerUtilities {
      * 
      * @param player
      *            is the <tt>Player</tt> that will be analyzed by this method to find the target block.
+     * @param max_distance
+     *            marks the maximum distance that will be searched for a target block matching the given parameters.
      * @param parameters
      *            is an optional parameter that includes a list of <tt>BlockSearch</tt> enums (specified in the {@link #PlayerUtilities PlayerUtilities} class). If <b>
      *            <tt>parameters</b></tt> is specified as <b>null</b>, the first non-air block found will be returned; if no parameters are specified, <b>
@@ -259,9 +241,9 @@ public class PlayerUtilities {
      *            corresponds to at least <i>one</i> of the <tt>BlockSearch</tt> parameters, e.g. the first solid block if <tt>BlockSearch.<i>SOLID</tt></i> is one of the
      *            parameters specified.
      * @return the block that <tt><b>player</b></tt> is pointing at that is of at least one of the types specified by the given <b><tt>parameters</b></tt>. */
-    public static Block getTargetBlock(Player player, BlockSearch... parameters) {
+    public static Block getTargetBlock(Player player, int max_distance, BlockSearch... parameters) {
         // d is for distance from the player's eye location
-        for (int d = 0; d < 5000; d++) {
+        for (int d = 0; d < max_distance * 10; d++) {
             double yaw = player.getLocation().getYaw(), pitch = player.getLocation().getPitch();
             Location location =
                     new Location(player.getWorld(), player.getLocation().getX() + d / 10.0 * Math.cos(Math.toRadians(yaw + 90)) * Math.cos(Math.toRadians(-pitch)), player
@@ -297,24 +279,16 @@ public class PlayerUtilities {
         // if the block is a half slab, but it's in the higher position (data > 8), then it's not at half height, so return false
         if (block.getTypeId() == 44 && block.getData() >= 8)
             return false;
-        for (int solid_partial_height_block_ID : Wiki.SOLID_PARTIAL_HEIGHT_BLOCK_IDS)
+        for (int solid_partial_height_block_ID : SOLID_PARTIAL_HEIGHT_BLOCK_IDS)
             if (solid_partial_height_block_ID == block.getTypeId())
                 return true;
         Block lower_block = block.getRelative(BlockFace.DOWN);
         if (lower_block == null)
             return false;
-        for (int fence_height_block_ID : Wiki.FENCE_HEIGHT_BLOCK_IDS)
+        for (int fence_height_block_ID : FENCE_HEIGHT_BLOCK_IDS)
             if (fence_height_block_ID == lower_block.getTypeId())
                 return true;
         return false;
-    }
-
-    public static void unfreezePlayer(Player player) {
-        unfreezePlayer(player.getName());
-    }
-
-    public static boolean unfreezePlayer(String player) {
-        return myCoreLibrary.frozen_players.remove(player);
     }
 
 }

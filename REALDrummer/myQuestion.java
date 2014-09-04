@@ -15,27 +15,28 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import static REALDrummer.utils.ArrayUtilities.*;
+import REALDrummer.interfaces.Inquirer;
+import REALDrummer.interfaces.Matchable;
+import static REALDrummer.utils.ListUtilities.*;
 import static REALDrummer.utils.ColorUtilities.colorCode;
-import static REALDrummer.utils.MessageUtilities.*;
 import static REALDrummer.myCoreLibrary.mCL;
 import static REALDrummer.utils.StringUtilities.readResponse;
 
 public class myQuestion implements Listener, ActionListener, Comparable<myQuestion>, Matchable {
     public static myList<myQuestion> questions = new myList<myQuestion>();
-    public static ArrayList<Inquirer> inquirers = new ArrayList<Inquirer>();
 
-    public String player, question_ID, initial_question, relog_reminder, cancel_message, inquirer;
-    public String[] timed_reminders;
-    public Timer timer;
-    public int time_counter = 0, reminder_timing;
-    public long time_asked;
-    public boolean success = true;
+    private Inquirer inquirer;
+    private String player, question_ID, initial_question, relog_reminder, cancel_message;
+    private String[] timed_reminders;
+    private Timer timer;
+    private int time_counter = 0, reminder_timing;
+    private long time_asked;
+    private boolean success = true;
 
     // TODO: make myQuestions work with the console commands
     // TODO: make myQuestions accept commands as well as chat answers
 
-    public myQuestion() {
+    myQuestion() {
         // this default constructor is just here to allow me to register this class as a Listener in myCoreLibrary's myEnable() without creating a whole functional question
     }
 
@@ -55,7 +56,7 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
         this.initial_question = initial_question;
         this.timed_reminders = timed_reminders;
         this.cancel_message = cancel_message;
-        this.inquirer = inquirer.getClass().getName();
+        this.inquirer = inquirer;
         this.reminder_timing = reminder_timing;
         time_asked = Calendar.getInstance().getTimeInMillis();
 
@@ -91,7 +92,7 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
 
     // listeners
     @EventHandler(priority = EventPriority.LOWEST)
-    public static void listenForAnswersToQuestions(AsyncPlayerChatEvent event) {
+    public void listenForAnswersToQuestions(AsyncPlayerChatEvent event) {
         // find out if this player has any questions pending
         myQuestion question = myQuestion.getNextPendingQuestion(event.getPlayer());
         if (question == null)
@@ -101,21 +102,8 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
         if (question.timer.getDelay() == 500)
             return;
 
-        // find the Inquirer
-        Inquirer this_inquirer = null;
-        for (Inquirer _inquirer : myQuestion.inquirers)
-            if (_inquirer.getClass().getName().equals(question.inquirer)) {
-                this_inquirer = _inquirer;
-                break;
-            }
-        if (this_inquirer == null) {
-            err(mCL, "I couldn't find the Inquirer associated with this question!", "missing Inquirer", "question.inquirer=\"" + question.inquirer + "\"", question);
-            myQuestion.questions.remove(question);
-            return;
-        }
-
         // send the results of the question to the Inquirer's questionAnswered method and remove the question
-        this_inquirer.questionAnswered(question, event.getMessage(), readResponse(event.getMessage()));
+        inquirer.questionAnswered(question, event.getMessage(), readResponse(event.getMessage()));
         myQuestion.questions.remove(question);
 
         // see if this player has any other questions pending
@@ -128,7 +116,7 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
     }
 
     @EventHandler
-    public static void onPlayerLeaveWaitForThemToReturn(PlayerQuitEvent event) {
+    public void onPlayerLeaveWaitForThemToReturn(PlayerQuitEvent event) {
         // find out if this player has any questions pending
         myQuestion question = myQuestion.getNextPendingQuestion(event.getPlayer());
         if (question == null)
@@ -140,7 +128,7 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
     }
 
     @EventHandler
-    public static void onPlayerReturnContinuemyQuestioning(PlayerJoinEvent event) {
+    public void onPlayerReturnContinuemyQuestioning(PlayerJoinEvent event) {
         // find any pending questions for this player
         myQuestion question = myQuestion.getNextPendingQuestion(event.getPlayer());
 
@@ -188,21 +176,8 @@ public class myQuestion implements Listener, ActionListener, Comparable<myQuesti
             target.sendMessage(colorCode(cancel_message));
             timer.stop();
 
-            // find the Inquirer
-            Inquirer this_inquirer = null;
-            for (Inquirer _inquirer : inquirers)
-                if (_inquirer.getClass().getName().equals(inquirer)) {
-                    this_inquirer = _inquirer;
-                    break;
-                }
-            if (this_inquirer == null) {
-                err(mCL, "I couldn't find the Inquirer associated with this question!", "missing Inquirer", "inquirer=\"" + inquirer + "\"", this);
-                questions.remove(this);
-                return;
-            }
-
             // inform the Inquirer of the cancellation of this question
-            this_inquirer.questionCancelled(this);
+            inquirer.questionCancelled(this);
         } // if we have not gone through all the timed reminders, ask the next reminder question
         else {
             target.sendMessage(colorCode(timed_reminders[time_counter]));

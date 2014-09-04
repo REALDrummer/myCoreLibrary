@@ -2,11 +2,13 @@ package REALDrummer.utils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import static REALDrummer.myCoreLibrary.mCL;
-import static REALDrummer.utils.MessageUtilities.*;
 
-public class ArrayUtilities {
+public class ListUtilities {
+
+    // contents
     public static <T> ArrayList<T> arrayToArrayList(T[] array) {
         ArrayList<T> array_list = new ArrayList<T>();
         for (T object : array)
@@ -39,7 +41,7 @@ public class ArrayUtilities {
             try {
                 combination += strings[i];
             } catch (ArrayIndexOutOfBoundsException e) {
-                err(mCL, "Someone gave me bad indices!", e);
+                mCL.err("Someone gave me bad indices!", e);
             }
             if (i < end_index - 1)
                 combination += separator;
@@ -51,24 +53,40 @@ public class ArrayUtilities {
         return combine(strings, "", indices);
     }
 
+    /** This method compares two lists of Objects, giving the greatest priority to the first element in the lists. In other words, it compares the first element in the <b>
+     * <tt>initial_array</b></tt> to the first element in the <b><tt>compare_array</b></tt> (using {@link Comparable#compareTo(Object)} if available, comparing
+     * <tt>toString()</tt> outputs otherwise). If the comparison results in something other than a 0, it returns that value; otherwise, it compares the next element in each
+     * array until it gets a non-zero result. If the end of one or both lists is reached, 0 is returned.
+     * <hr>
+     * If an element in either array is <b>null</b>, the comparison automatically results in a 0; in other words, <b>null</b> can be used as a "wild card".
+     * 
+     * @param initial_array
+     *            is the array that will be compared to <b><tt>compare_array</b></tt>. If <b><tt>initial_array</b></tt> > <b><tt>compare_array</b></tt>, this method will
+     *            return a <i>positive</i> integer.
+     * @param compare_array
+     *            is the array that will be compared to <b><tt>initial_array</b></tt>. If <b><tt>compare_array</b></tt> > <b><tt>initial_array</b></tt>, this method will
+     *            return a <i>negative</i> integer.
+     * @return the first comparison of elements in the arrays that returns something besides 0 or 0 if all elements are equivalent. */
     @SafeVarargs
     public static <T> int compare(T[] initial_array, T... compare_array) {
         // first, try parsing through the lists and comparing the elements in each
         for (int i = 0; i < initial_array.length && i < compare_array.length; i++) {
             int compare;
 
-            try {
-                compare = (int) initial_array[i].getClass().getMethod("compareTo", initial_array[i].getClass()).invoke(compare_array[i]);
-            } catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
-                compare = initial_array[i].toString().compareTo(compare_array[i].toString());
-            }
+            if (initial_array[i] == null || compare_array[i] == null)
+                continue;
+            else
+                try {
+                    compare = (int) initial_array[i].getClass().getMethod("compareTo", initial_array[i].getClass()).invoke(compare_array[i]);
+                } catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
+                    compare = initial_array[i].toString().compareTo(compare_array[i].toString());
+                }
 
             if (compare != 0)
                 return compare;
         }
 
-        // if the loop finished without finding any differences, compare the lengths
-        return initial_array.length - compare_array.length;
+        return 0;
     }
 
     /** This method determines whether or not a given array contains a given int.
@@ -113,6 +131,20 @@ public class ArrayUtilities {
         return false;
     }
 
+    // TODO: containsAND and containsOR
+
+    public static int match(Object object, String... match_parameters) {
+        return StringUtilities.match(object, match_parameters);
+    }
+
+    public static int match(Object[] objects, String[] match_parameters) {
+        return StringUtilities.match(objects, match_parameters);
+    }
+
+    public static int match(Object[] objects, String[]... match_parameters) {
+        return StringUtilities.match(objects, match_parameters);
+    }
+
     /** This method separates items in a properly formatted list into individual Strings.
      * 
      * @param list
@@ -133,7 +165,8 @@ public class ArrayUtilities {
         if (list.contains(separator)) {
             objects = list.split(separator);
             // remove the final conjunction (usually "and") at the beginning of the list object
-            objects[objects.length - 1] = objects[objects.length - 1].substring(final_conjunction.length() + 1);
+            if (objects[objects.length - 1].startsWith(final_conjunction + " "))
+                objects[objects.length - 1] = objects[objects.length - 1].substring(final_conjunction.length() + 1);
         }
         // for 2-item lists
         else if (list.contains(" " + final_conjunction + " "))
@@ -162,7 +195,7 @@ public class ArrayUtilities {
                 new_objects[i] = objects[i + start];
             return (T[]) new_objects;
         } catch (ArrayIndexOutOfBoundsException exception) {
-            err(mCL, "Someone gave subArray() bad indices!", exception, objects, start, end);
+            mCL.err("Someone gave subArray() bad indices!", exception, objects, start, end);
             return null;
         }
     }
@@ -200,7 +233,7 @@ public class ArrayUtilities {
         if (objects.length == 0)
             return "";
         else if (objects.length == 1)
-            return prefix + objects[0].toString() + suffix;
+            return prefix + objects[0] + suffix;
         else if (objects.length == 2)
             return objects[0] + " " + final_conjunction + " " + objects[1];
         else {
@@ -209,7 +242,7 @@ public class ArrayUtilities {
                 list += prefix + objects[i] + suffix;
                 if (i < objects.length - 1) {
                     list += separator;
-                    if (i == objects.length - 2)
+                    if (i == objects.length - 2 && !final_conjunction.equals(""))
                         list += final_conjunction + " ";
                 }
             }
@@ -251,5 +284,17 @@ public class ArrayUtilities {
 
     public static String writeArrayList(ArrayList<?> objects) {
         return writeArrayList(objects, null, null, null, null);
+    }
+
+    public static String writeMap(Map<?, ?> objects) {
+        String[] values = new String[objects.keySet().size()];
+
+        int i = 0;
+        for (Object key : objects.keySet()) {  // this must be a for each loop with a counter rather than a regular for loop because sets are not indexed
+            values[i] = key.toString() + " -> " + objects.get(key).toString();
+            i++;
+        }
+
+        return writeArray(values, "; ");
     }
 }

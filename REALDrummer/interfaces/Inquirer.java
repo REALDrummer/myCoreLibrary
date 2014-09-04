@@ -1,4 +1,6 @@
-package REALDrummer;
+package REALDrummer.interfaces;
+
+import REALDrummer.myQuestion;
 
 public interface Inquirer {
     public void questionAnswered(myQuestion question, String answer_message, boolean answer);

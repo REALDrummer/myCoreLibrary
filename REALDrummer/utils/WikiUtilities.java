@@ -12,11 +12,9 @@ import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 
-import REALDrummer.Wiki;
-
+import static REALDrummer.myWiki.*;
 import static REALDrummer.myCoreLibrary.mCL;
-import static REALDrummer.utils.ArrayUtilities.*;
-import static REALDrummer.utils.MessageUtilities.*;
+import static REALDrummer.utils.ListUtilities.*;
 import static REALDrummer.utils.StringUtilities.*;
 
 public class WikiUtilities {
@@ -32,7 +30,7 @@ public class WikiUtilities {
         // return null if the I.D. doesn't belong to anything or is an item I.D. instead of a block I.D.
         if (getItemName(id, -1, false, false, true) == null || id >= 256)
             return null;
-        for (int can_be_broken_by_liquids_ID : Wiki.CAN_BE_BROKEN_BY_LIQUIDS_IDS)
+        for (int can_be_broken_by_liquids_ID : CAN_BE_BROKEN_BY_LIQUIDS_IDS)
             if (id == can_be_broken_by_liquids_ID)
                 return true;
         return false;
@@ -83,14 +81,14 @@ public class WikiUtilities {
     public static Integer getEnchantmentId(String[] enchantment_name) {
         Integer result_id = null, result_i = null;
 
-        for (int id = 0; id < Wiki.ENCHANTMENT_IDS.length; id++)
-            if (Wiki.ENCHANTMENT_IDS[id] != null)
-                for (int i = 0; i < Wiki.ENCHANTMENT_IDS[id].length; i++) {
+        for (int id = 0; id < ENCHANTMENT_IDS.length; id++)
+            if (ENCHANTMENT_IDS[id] != null)
+                for (int i = 0; i < ENCHANTMENT_IDS[id].length; i++) {
                     boolean contains_query = true;
                     for (String word : enchantment_name)
                         // if word starts and ends with parentheses, it's a data suffix, so ignore it in the search; also ignore articles
                         if (!(word.startsWith("(") && word.endsWith(")")) && !word.equalsIgnoreCase("a") && !word.equalsIgnoreCase("an") && !word.equalsIgnoreCase("the")
-                                && !word.equalsIgnoreCase("some") && !Wiki.ENCHANTMENT_IDS[id][i].toLowerCase().contains(word.toLowerCase())) {
+                                && !word.equalsIgnoreCase("some") && !ENCHANTMENT_IDS[id][i].toLowerCase().contains(word.toLowerCase())) {
                             contains_query = false;
                             break;
                         }
@@ -98,8 +96,8 @@ public class WikiUtilities {
                      * this new one, or the length of the names is the same but this new result is an entity I.D. while the old one is a block I.D., then change the current
                      * result to this new entity */
                     if (contains_query
-                            && (result_id == null || Wiki.ENCHANTMENT_IDS[result_id][result_i].length() > Wiki.ENCHANTMENT_IDS[id][i].length() || (Wiki.ENCHANTMENT_IDS[result_id][result_i]
-                                    .length() == Wiki.ENCHANTMENT_IDS[id][i].length()
+                            && (result_id == null || ENCHANTMENT_IDS[result_id][result_i].length() > ENCHANTMENT_IDS[id][i].length() || (ENCHANTMENT_IDS[result_id][result_i]
+                                    .length() == ENCHANTMENT_IDS[id][i].length()
                                     && result_id < 256 && id >= 256))) {
                         result_id = id;
                         result_i = i;
@@ -119,14 +117,14 @@ public class WikiUtilities {
                         // try reading it as "something with the I.D. [id]:[data]"
                         String[] id_and_data = enchantment_name[4].split(":");
                         if (id_and_data.length != 2) {
-                            tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
-                                    + combine(enchantment_name, " ") + ChatColor.DARK_RED + "\"", true);
+                            mCL.err("Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
+                                    + combine(enchantment_name, " ") + ChatColor.DARK_RED + "\"", e);
                             return null;
                         }
                         result_id = Integer.parseInt(id_and_data[0]);
                         return result_id;
                     } catch (NumberFormatException e2) {
-                        err(mCL, "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + combine(enchantment_name, " ")
+                        mCL.err("Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + combine(enchantment_name, " ")
                                 + ChatColor.DARK_RED + "\"", e2);
                         return null;
                     }
@@ -135,7 +133,7 @@ public class WikiUtilities {
                 return null;
         else {
             // now we need to adjust the final result based on the gaps in I.D.s for the I.D. gaps
-            for (short[] gap : Wiki.ENCHANTMENT_GAPS)
+            for (short[] gap : ENCHANTMENT_GAPS)
                 if (result_id > gap[0])
                     result_id += (gap[1] - gap[0] - 1);
                 else
@@ -154,18 +152,18 @@ public class WikiUtilities {
 
     public static String getEnchantmentName(int id) {
         // return null if the I.D. is inside a gap
-        for (short[] gap : Wiki.ENCHANTMENT_GAPS)
+        for (short[] gap : ENCHANTMENT_GAPS)
             if (id > gap[0] && id < gap[1])
                 return null;
         // account for the gaps in the Enchantment I.D.s
-        for (int i = Wiki.ENCHANTMENT_GAPS.length - 1; i >= 0; i--)
-            if (id >= Wiki.ENCHANTMENT_GAPS[i][1])
-                id -= (Wiki.ENCHANTMENT_GAPS[i][1] - Wiki.ENCHANTMENT_GAPS[i][0] - 1);
+        for (int i = ENCHANTMENT_GAPS.length - 1; i >= 0; i--)
+            if (id >= ENCHANTMENT_GAPS[i][1])
+                id -= (ENCHANTMENT_GAPS[i][1] - ENCHANTMENT_GAPS[i][0] - 1);
         String enchantment = null;
         // the Exceptions in this block of code can be ArrayIndexOutOfBoundsExceptions or NullPointerExceptions
         try {
             // try using the data and I.D. given
-            enchantment = Wiki.ENCHANTMENT_IDS[id][0];
+            enchantment = ENCHANTMENT_IDS[id][0];
         } catch (ArrayIndexOutOfBoundsException exception) {
             return null;
         } catch (NullPointerException exception) {
@@ -192,21 +190,21 @@ public class WikiUtilities {
      *      {@link #getEntityIdAndDataString(String) getEntityIdAndDataString(String)}
      * @NOTE This method returns both the I.D. and the data value of an entity based on the entity's name because it encourages the programmer to only use this method once as
      *       necessary, not once to get the I.D. and again to get the data. It is a long, somewhat complex method and it must search through hundreds of Strings in the
-     *       <tt>Wiki.ENTITY_IDS</tt> array to find a match. This method should only be called when necessary and results returned by this method should be stored in a
-     *       variable if needed more than once; do not simply call this method a second time. */
+     *       <tt>ENTITY_IDS</tt> array to find a match. This method should only be called when necessary and results returned by this method should be stored in a variable if
+     *       needed more than once; do not simply call this method a second time. */
     public static Integer[] getEntityIdAndData(String[] entity_name) {
         Integer result_id = null, result_data = null, result_i = null;
-        for (int id = 0; id < Wiki.ENTITY_IDS.length; id++)
-            if (Wiki.ENTITY_IDS[id] != null)
-                for (int data = 0; data < Wiki.ENTITY_IDS[id].length; data++)
-                    if (Wiki.ENTITY_IDS[id][data] != null)
-                        for (int i = 0; i < Wiki.ENTITY_IDS[id][data].length; i++) {
+        for (int id = 0; id < ENTITY_IDS.length; id++)
+            if (ENTITY_IDS[id] != null)
+                for (int data = 0; data < ENTITY_IDS[id].length; data++)
+                    if (ENTITY_IDS[id][data] != null)
+                        for (int i = 0; i < ENTITY_IDS[id][data].length; i++) {
                             boolean contains_query = true;
                             for (String word : entity_name)
                                 // if word starts and ends with parentheses, it's a data suffix, so ignore it in the search; also ignore articles
                                 if (!(word.startsWith("(") && word.endsWith(")")) && !word.equalsIgnoreCase("a") && !word.equalsIgnoreCase("an")
                                         && !word.equalsIgnoreCase("the") && !word.equalsIgnoreCase("some")
-                                        && !Wiki.ENTITY_IDS[id][data][i].toLowerCase().contains(word.toLowerCase())) {
+                                        && !ENTITY_IDS[id][data][i].toLowerCase().contains(word.toLowerCase())) {
                                     contains_query = false;
                                     break;
                                 }
@@ -214,8 +212,8 @@ public class WikiUtilities {
                             // has a longer name than this new one, or the length of the names is the same but this new result is an entity I.D. while the old
                             // one is a block I.D., then change the current result to this new entity
                             if (contains_query
-                                    && (result_id == null || Wiki.ENTITY_IDS[result_id][result_data][result_i].length() > Wiki.ENTITY_IDS[id][data][i].length() || (Wiki.ENTITY_IDS[result_id][result_data][result_i]
-                                            .length() == Wiki.ENTITY_IDS[id][data][i].length()
+                                    && (result_id == null || ENTITY_IDS[result_id][result_data][result_i].length() > ENTITY_IDS[id][data][i].length() || (ENTITY_IDS[result_id][result_data][result_i]
+                                            .length() == ENTITY_IDS[id][data][i].length()
                                             && result_id < 256 && id >= 256))) {
                                 result_id = id;
                                 result_data = data;
@@ -235,15 +233,15 @@ public class WikiUtilities {
                         // try reading it as "something with the I.D. [id]:[data]"
                         String[] id_and_data = entity_name[4].split(":");
                         if (id_and_data.length != 2) {
-                            tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + "\""
-                                    + combine(entity_name, " ") + ChatColor.DARK_RED + "\".", true);
+                            mCL.err("I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + "\"" + combine(entity_name, " ") + ChatColor.DARK_RED
+                                    + "\".", "unknown object");
                             return null;
                         }
                         result_id = Integer.parseInt(id_and_data[0]);
                         result_data = Integer.parseInt(id_and_data[1]);
                         return new Integer[] { result_id, result_data };
                     } catch (NumberFormatException e2) {
-                        err(mCL, "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + "\"" + combine(entity_name, " ")
+                        mCL.err("Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + "\"" + combine(entity_name, " ")
                                 + ChatColor.DARK_RED + "\"", e2);
                         return null;
                     }
@@ -258,12 +256,12 @@ public class WikiUtilities {
                 try {
                     result_data = Integer.parseInt(entity_name[entity_name.length - 1].substring(1, entity_name[entity_name.length - 1].length() - 1));
                 } catch (NumberFormatException e) {
-                    err(mCL, "Oh, nos! I got an error trying to read the data suffix on this item name: \"" + ChatColor.WHITE + combine(entity_name, " ") + ChatColor.DARK_RED
+                    mCL.err("Oh, nos! I got an error trying to read the data suffix on this item name: \"" + ChatColor.WHITE + combine(entity_name, " ") + ChatColor.DARK_RED
                             + "\".\nI read \"" + ChatColor.WHITE + entity_name[entity_name.length - 1].substring(1, entity_name[entity_name.length - 1].length() - 1)
                             + ChatColor.DARK_RED + "\" as the data value in the data suffix.", e);
                 }
             // now we need to adjust the final result based on the gaps in I.D.s
-            for (short[] gap : Wiki.ENTITY_GAPS)
+            for (short[] gap : ENTITY_GAPS)
                 if (result_id > gap[0])
                     result_id += (gap[1] - gap[0] - 1);
                 else
@@ -346,13 +344,13 @@ public class WikiUtilities {
      * @see {@link #getEntityName(Entity, boolean, boolean) getEntityName(Entity, boolean, boolean)} */
     public static String getEntityName(int id, int data, boolean give_data_suffix, boolean singular, boolean without_article) {
         // return null if the I.D. is inside a gap
-        for (short[] gap : Wiki.ENTITY_GAPS)
+        for (short[] gap : ENTITY_GAPS)
             if (id > gap[0] && id < gap[1])
                 return null;
         // for the entity gaps
-        for (int i = Wiki.ENTITY_GAPS.length - 1; i >= 0; i--)
-            if (id >= Wiki.ENTITY_GAPS[i][1])
-                id -= (Wiki.ENTITY_GAPS[i][1] - Wiki.ENTITY_GAPS[i][0] - 1);
+        for (int i = ENTITY_GAPS.length - 1; i >= 0; i--)
+            if (id >= ENTITY_GAPS[i][1])
+                id -= (ENTITY_GAPS[i][1] - ENTITY_GAPS[i][0] - 1);
         int sing_plur = 0;
         if (singular)
             sing_plur = 1;
@@ -360,17 +358,17 @@ public class WikiUtilities {
         // the Exceptions in this block of code can be ArrayIndexOutOfBoundsExceptions or NullPointerExceptions
         try {
             // try using the data and I.D. given
-            entity = Wiki.ENTITY_IDS[id][data + 1][sing_plur];
+            entity = ENTITY_IDS[id][data + 1][sing_plur];
         } catch (ArrayIndexOutOfBoundsException exception) {
             try {
                 // if that doesn't work, try substracting 4 from the data until we can't any more and try again
-                entity = Wiki.ENTITY_IDS[id][data % 4 + 1][sing_plur];
+                entity = ENTITY_IDS[id][data % 4 + 1][sing_plur];
                 if (entity != null && give_data_suffix && data > 0)
                     entity += " (" + data + ")";
             } catch (Exception exception2) {
                 try {
                     // if that doesn't work, try giving the general name for the entity with the I.D.
-                    entity = Wiki.ENTITY_IDS[id][0][sing_plur];
+                    entity = ENTITY_IDS[id][0][sing_plur];
                     if (entity != null && give_data_suffix && data > 0)
                         entity += " (" + data + ")";
                 } catch (Exception exception3) {
@@ -470,7 +468,7 @@ public class WikiUtilities {
      *         should only return block types or vice versa.
      * @NOTE This method returns both the I.D. and the data value of an item based on the item's name because it encourages the programmer to only use this method once as
      *       necessary, not once to get the I.D. and again to get the data. It is a long, somewhat complex method and it must search through hundreds and hundreds of Strings
-     *       in the <tt>Wiki.ITEM_IDS</tt> array to find a match. This method should only be called when necessary and results returned by this method should be stored in a
+     *       in the <tt>ITEM_IDS</tt> array to find a match. This method should only be called when necessary and results returned by this method should be stored in a
      *       variable if needed more than once; do not simply call this method a second time.
      * @see {@link #getItemIdAndData(String, Boolean) getItemIdAndData(String, Boolean)}, {@link #getItemIdAndDataString(String[], Boolean) getItemIdAndDataString(String[],
      *      Boolean)}, and {@link #getItemIdAndDataString(String, Boolean) getItemIdAndDataString(String, Boolean)} */
@@ -479,19 +477,19 @@ public class WikiUtilities {
         int start_id = 0;
         // if item_ID is true, we only want item I.D.s, so start searching at item I.D.s
         if (item_ID != null && item_ID)
-            start_id = Wiki.ITEM_GAPS[0][0] + 1;
-        for (int check_id = start_id; check_id < Wiki.ITEM_IDS.length; check_id++) {
-            if (Wiki.ITEM_IDS[check_id] != null)
-                for (int check_data = 0; check_data < Wiki.ITEM_IDS[check_id].length; check_data++)
-                    if (Wiki.ITEM_IDS[check_id][check_data] != null)
-                        for (int i = 0; i < Wiki.ITEM_IDS[check_id][check_data].length; i++) {
+            start_id = ITEM_GAPS[0][0] + 1;
+        for (int check_id = start_id; check_id < ITEM_IDS.length; check_id++) {
+            if (ITEM_IDS[check_id] != null)
+                for (int check_data = 0; check_data < ITEM_IDS[check_id].length; check_data++)
+                    if (ITEM_IDS[check_id][check_data] != null)
+                        for (int i = 0; i < ITEM_IDS[check_id][check_data].length; i++) {
                             boolean contains_query = true;
                             String[] nothing_words = { "a", "an", "the", "some", "of", "o'", "with", "for", "in", "on" };
                             for (String word : item_name)
                                 /* if word starts and ends with parentheses, it's a data suffix, so ignore it in the search; also ignore nothing words like prepositions and
                                  * articles */
                                 if (!(word.startsWith("(") && word.endsWith(")")) && !contains(nothing_words, word.toLowerCase())
-                                        && !Wiki.ITEM_IDS[check_id][check_data][i].toLowerCase().contains(word.toLowerCase())) {
+                                        && !ITEM_IDS[check_id][check_data][i].toLowerCase().contains(word.toLowerCase())) {
                                     contains_query = false;
                                     break;
                                 }
@@ -499,16 +497,16 @@ public class WikiUtilities {
                             // has a longer name than this new one, or the length of the names is the same but this new result is an item I.D. while the old one
                             // is a block I.D. and item_ID is null, then change the current result to this new item
                             if (contains_query
-                                    && (result_id == null || Wiki.ITEM_IDS[result_id][result_data][result_i].length() > Wiki.ITEM_IDS[check_id][check_data][i].length() || (Wiki.ITEM_IDS[result_id][result_data][result_i]
-                                            .equals(Wiki.ITEM_IDS[check_id][check_data][i])
+                                    && (result_id == null || ITEM_IDS[result_id][result_data][result_i].length() > ITEM_IDS[check_id][check_data][i].length() || (ITEM_IDS[result_id][result_data][result_i]
+                                            .equals(ITEM_IDS[check_id][check_data][i])
                                             && item_ID == null && result_id < check_id))) {
                                 result_id = check_id;
                                 result_data = check_data;
                                 result_i = i;
                             }
                         }
-            // if Wiki.ITEM_IDS is false, we don't want item I.D.s, so stop checking after we have checked the first part, the block I.D.s
-            if (check_id > Wiki.ITEM_GAPS[0][0] && item_ID != null && !item_ID)
+            // if ITEM_IDS is false, we don't want item I.D.s, so stop checking after we have checked the first part, the block I.D.s
+            if (check_id > ITEM_GAPS[0][0] && item_ID != null && !item_ID)
                 break;
         }
         // if we returned no results, it's possible that the object was "something with the I.D. [id](":"[data])"
@@ -525,16 +523,16 @@ public class WikiUtilities {
                         // try reading it as "something with the I.D. [id]:[data]"
                         String[] id_and_data = item_name[4].split(":");
                         if (id_and_data.length != 2) {
-                            tellOps(ChatColor.DARK_RED + "Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
-                                    + combine(item_name) + ChatColor.DARK_RED + "\".", true);
+                            mCL.err("Aww! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + combine(item_name)
+                                    + ChatColor.DARK_RED + "\".", "unknown object");
                             return null;
                         }
                         result_id = Integer.parseInt(id_and_data[0]);
                         result_data = Integer.parseInt(id_and_data[1]);
                         return new Integer[] { result_id, result_data };
                     } catch (NumberFormatException exception2) {
-                        tellOps(ChatColor.DARK_RED + "Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE
-                                + combine(item_name) + ChatColor.DARK_RED + "\".", true);
+                        mCL.err("Darn! Something went wrong! I couldn't get the I.D. and data from this object name: \"" + ChatColor.WHITE + combine(item_name)
+                                + ChatColor.DARK_RED + "\".", exception2);
                         return null;
                     }
                 }
@@ -545,7 +543,7 @@ public class WikiUtilities {
             result_data -= 1;
             // now we need to adjust the final result based on the gaps in I.D.s
             // for the I.D. gaps
-            for (short[] gap : Wiki.ITEM_GAPS)
+            for (short[] gap : ITEM_GAPS)
                 if (result_id > gap[0])
                     result_id += (gap[1] - gap[0] - 1);
                 else
@@ -555,7 +553,7 @@ public class WikiUtilities {
                 try {
                     result_data = Integer.parseInt(item_name[item_name.length - 1].substring(1, item_name[item_name.length - 1].length() - 1));
                 } catch (NumberFormatException e) {
-                    err(mCL, "Oh, nos! I got an error trying to read the data suffix on this item name!: \"" + ChatColor.WHITE + combine(item_name, " ") + ChatColor.DARK_RED
+                    mCL.err("Oh, nos! I got an error trying to read the data suffix on this item name!: \"" + ChatColor.WHITE + combine(item_name, " ") + ChatColor.DARK_RED
                             + "\".\nI read " + ChatColor.WHITE + "\"" + item_name[item_name.length - 1].substring(1, item_name[item_name.length - 1].length() - 1) + "\""
                             + ChatColor.DARK_RED + " as the data value in the data suffix.", e);
                 }
@@ -563,14 +561,14 @@ public class WikiUtilities {
             else {
                 // for the potion data values gaps
                 if (result_id == 373)
-                    for (short[] gap : Wiki.POTION_DATA_GAPS)
+                    for (short[] gap : POTION_DATA_GAPS)
                         if (result_data > gap[0])
                             result_data += (gap[1] - gap[0] - 1);
                         else
                             break;
                 // for the spawn egg data values gaps
                 else if (result_id == 383)
-                    for (short[] gap : Wiki.SPAWN_EGG_DATA_GAPS)
+                    for (short[] gap : SPAWN_EGG_DATA_GAPS)
                         if (result_data > gap[0])
                             result_data += (gap[1] - gap[0] - 1);
                         else
@@ -665,32 +663,32 @@ public class WikiUtilities {
     public static String getItemName(int id, int data, boolean give_data_suffix, boolean singular, boolean without_article) {
         // return null if the potion data is inside a gap
         if (id == 373)
-            for (short[] gap : Wiki.POTION_DATA_GAPS)
+            for (short[] gap : POTION_DATA_GAPS)
                 if (data > gap[0] && data < gap[1])
                     return null;
         // return null if the spawn egg data is inside a gap
         if (id == 383)
-            for (short[] gap : Wiki.SPAWN_EGG_DATA_GAPS)
+            for (short[] gap : SPAWN_EGG_DATA_GAPS)
                 if (data > gap[0] && data < gap[1])
                     return null;
         // return null if the I.D. is inside a gap
-        for (short[] gap : Wiki.ITEM_GAPS)
+        for (short[] gap : ITEM_GAPS)
             if (id > gap[0] && id < gap[1])
                 return null;
         // we need to adjust the query I.D.s based on the gaps in I.D.s for the potion data values gaps
         if (id == 373)
-            for (int i = Wiki.POTION_DATA_GAPS.length - 1; i >= 0; i--)
-                if (data >= Wiki.POTION_DATA_GAPS[i][1])
-                    data -= (Wiki.POTION_DATA_GAPS[i][1] - Wiki.POTION_DATA_GAPS[i][0] - 1);
+            for (int i = POTION_DATA_GAPS.length - 1; i >= 0; i--)
+                if (data >= POTION_DATA_GAPS[i][1])
+                    data -= (POTION_DATA_GAPS[i][1] - POTION_DATA_GAPS[i][0] - 1);
         // for the spawn egg data values gaps
         if (id == 383)
-            for (int i = Wiki.SPAWN_EGG_DATA_GAPS.length - 1; i >= 0; i--)
-                if (data >= Wiki.SPAWN_EGG_DATA_GAPS[i][1])
-                    data -= (Wiki.SPAWN_EGG_DATA_GAPS[i][1] - Wiki.SPAWN_EGG_DATA_GAPS[i][0] - 1);
+            for (int i = SPAWN_EGG_DATA_GAPS.length - 1; i >= 0; i--)
+                if (data >= SPAWN_EGG_DATA_GAPS[i][1])
+                    data -= (SPAWN_EGG_DATA_GAPS[i][1] - SPAWN_EGG_DATA_GAPS[i][0] - 1);
         // for the item gaps
-        for (int i = Wiki.ITEM_GAPS.length - 1; i >= 0; i--)
-            if (id >= Wiki.ITEM_GAPS[i][1])
-                id -= (Wiki.ITEM_GAPS[i][1] - Wiki.ITEM_GAPS[i][0] - 1);
+        for (int i = ITEM_GAPS.length - 1; i >= 0; i--)
+            if (id >= ITEM_GAPS[i][1])
+                id -= (ITEM_GAPS[i][1] - ITEM_GAPS[i][0] - 1);
         int sing_plur = 0;
         if (singular)
             sing_plur = 1;
@@ -698,12 +696,12 @@ public class WikiUtilities {
         // the Exceptions in this block of code can be ArrayIndexOutOfBoundsExceptions or NullPointerExceptions
         try {
             // try using the data and I.D. given
-            item = Wiki.ITEM_IDS[id][data + 1][sing_plur];
+            item = ITEM_IDS[id][data + 1][sing_plur];
         } catch (ArrayIndexOutOfBoundsException exception) {
             // try first subtracting the data by 8 until we get a result
             for (int temp_data = data; temp_data >= 8; temp_data -= 8) {
                 try {
-                    item = Wiki.ITEM_IDS[id][temp_data + 1][sing_plur];
+                    item = ITEM_IDS[id][temp_data + 1][sing_plur];
                     break;
                 } catch (Exception exception2) {
                     //
@@ -713,7 +711,7 @@ public class WikiUtilities {
             if (item == null)
                 for (int temp_data = data; temp_data >= 4; temp_data -= 8) {
                     try {
-                        item = Wiki.ITEM_IDS[id][temp_data + 1][sing_plur];
+                        item = ITEM_IDS[id][temp_data + 1][sing_plur];
                         break;
                     } catch (Exception exception2) {
                         //
@@ -722,7 +720,7 @@ public class WikiUtilities {
             // if that fails, use the general term
             if (item == null)
                 try {
-                    item = Wiki.ITEM_IDS[id][0][sing_plur];
+                    item = ITEM_IDS[id][0][sing_plur];
                 } catch (Exception exception2) {
                     return null;
                 }
@@ -806,11 +804,11 @@ public class WikiUtilities {
         if (getItemName(id, -1, false, false, true) == null || id >= 256)
             return null;
         if (bottom_only == null || bottom_only)
-            for (int must_be_attached_bottom_only_ID : Wiki.MUST_BE_ATTACHED_BOTTOM_ONLY_IDS)
+            for (int must_be_attached_bottom_only_ID : MUST_BE_ATTACHED_BOTTOM_ONLY_IDS)
                 if (must_be_attached_bottom_only_ID == id)
                     return true;
         if (bottom_only == null || !bottom_only)
-            for (int must_be_attached_can_be_sideways_ID : Wiki.MUST_BE_ATTACHED_CAN_BE_SIDEWAYS_IDS)
+            for (int must_be_attached_can_be_sideways_ID : MUST_BE_ATTACHED_CAN_BE_SIDEWAYS_IDS)
                 if (must_be_attached_can_be_sideways_ID == id)
                     return true;
         return false;
@@ -855,7 +853,7 @@ public class WikiUtilities {
             return null;
         else if (id >= 256)
             return false;
-        for (int lockable : Wiki.LOCKABLE_CONTAINER_IDS)
+        for (int lockable : LOCKABLE_CONTAINER_IDS)
             // in LOCKABLE_CONTAINER_IDS, all the values are positive or negative depending on whether or not they can store items when the player exits the
             // block's inventory; therefore, we have to take the absolute value of the stored lockable container I.D. here
             if (Math.abs(lockable) == id)
@@ -892,7 +890,7 @@ public class WikiUtilities {
     public static Boolean isDamageable(int id) {
         if (getItemName(id, 0, true, true, true) == null)
             return null;
-        for (short[] damageable : Wiki.DAMAGEABLE_ITEM_IDS)
+        for (short[] damageable : DAMAGEABLE_ITEM_IDS)
             if (damageable[0] == id)
                 return true;
         return false;
@@ -901,8 +899,8 @@ public class WikiUtilities {
     public static boolean isDamageable(ItemStack item) {
         Boolean result = isDamageable(item.getTypeId());
         if (result == null) {
-            tellOps(ChatColor.DARK_RED + "Someone just tried to see if this item was damageable, but I don't know what this item is! It has the I.D. " + item.getTypeId()
-                    + ". Is myPluginWiki up to date?", true);
+            mCL.err("Someone just tried to see if this item was damageable, but I don't know what this item is! Is myCoreLibrary up to date?", "unknown item", "I.D.="
+                    + item.getTypeId());
             return false;
         }
         return result;
@@ -912,7 +910,7 @@ public class WikiUtilities {
         if (getItemName(id, -1, false, true, true) == null)
             return null;
 
-        return contains(Wiki.LIQUID_BLOCK_IDS, (short) id);
+        return contains(LIQUID_BLOCK_IDS, (short) id);
     }
 
     public static Boolean isLiquid(Block block) {
@@ -931,7 +929,7 @@ public class WikiUtilities {
         if (getItemName(id, -1, false, true, true) == null)
             return null;
 
-        return contains(Wiki.NON_SOLID_BLOCK_IDS, (short) id);
+        return contains(NON_SOLID_BLOCK_IDS, (short) id);
     }
 
     public static Boolean isNonSolid(Block block) {
@@ -964,15 +962,15 @@ public class WikiUtilities {
             return null;
         else if (id >= 256)
             return false;
-        for (int lockable : Wiki.LOCKABLE_CONTAINER_IDS)
+        for (int lockable : LOCKABLE_CONTAINER_IDS)
             // in LOCKABLE_CONTAINER_IDS, all the values are positive or negative depending on whether or not they can store items when the player exits the
             // block's inventory; therefore, we have to take the absolute value of the stored lockable container I.D. here
             if (Math.abs(lockable) == id)
                 return true;
-        for (int lockable : Wiki.LOCKABLE_PORTAL_IDS)
+        for (int lockable : LOCKABLE_PORTAL_IDS)
             if (lockable == id)
                 return true;
-        for (int lockable : Wiki.LOCKABLE_SWITCH_IDS)
+        for (int lockable : LOCKABLE_SWITCH_IDS)
             if (lockable == id)
                 return true;
         return false;
@@ -1017,7 +1015,7 @@ public class WikiUtilities {
             return null;
         else if (id >= 256)
             return false;
-        for (int lockable : Wiki.LOCKABLE_PORTAL_IDS)
+        for (int lockable : LOCKABLE_PORTAL_IDS)
             if (lockable == id)
                 return true;
         return false;
@@ -1045,7 +1043,7 @@ public class WikiUtilities {
     public static Boolean isRepairableWithSomethingBesidesItself(int id) {
         if (getItemName(id, 0, true, true, true) == null)
             return null;
-        for (short[] damageable : Wiki.DAMAGEABLE_ITEM_IDS)
+        for (short[] damageable : DAMAGEABLE_ITEM_IDS)
             if (damageable[0] == id)
                 if (damageable.length > 1)
                     return true;
@@ -1057,9 +1055,8 @@ public class WikiUtilities {
     public static boolean isRepairableWithSomethingBesidesItself(ItemStack item) {
         Boolean result = isRepairableWithSomethingBesidesItself(item.getTypeId());
         if (result == null) {
-            tellOps(ChatColor.DARK_RED
-                    + "Someone just tried to see if this item was repairable with something besides itself, but I don't know what this item is! It has the I.D. "
-                    + item.getTypeId() + ". Is myPluginWiki up to date?", true);
+            mCL.err("Someone just tried to see if this item was repairable with something besides itself, but I don't know what this item is! Is myCoreLibrary up to date?",
+                    "I.D.=" + item.getTypeId());
             return false;
         }
         return result;
@@ -1068,7 +1065,7 @@ public class WikiUtilities {
     public static Boolean isRepairableWith(int id, int id2) {
         if (getItemName(id, 0, true, true, true) == null || getItemName(id2, 0, true, true, true) == null)
             return null;
-        for (short[] damageable : Wiki.DAMAGEABLE_ITEM_IDS)
+        for (short[] damageable : DAMAGEABLE_ITEM_IDS)
             if (damageable[0] == id)
                 if (damageable.length > 1 && damageable[1] == id2)
                     return true;
@@ -1080,19 +1077,18 @@ public class WikiUtilities {
     public static boolean isRepairableWith(ItemStack item, ItemStack item2) {
         Boolean result = isRepairableWith(item.getTypeId(), item2.getTypeId());
         if (result == null) {
-            tellOps(ChatColor.DARK_RED
-                    + "Someone just tried to see if this item was repairable with this other item, but I don't know what this item is! One item has the I.D. "
-                    + item.getTypeId() + " and the other has the I.D. " + item2.getTypeId() + ". Is myPluginWiki up to date?", true);
+            mCL.err("Someone just tried to see if this item was repairable with this other item, but I don't know what this item is! Is myCoreLibrary up to date?",
+                    "I.D. of item 1=" + item.getTypeId(), "I.D. of item 2=" + item2.getTypeId());
             return false;
         }
         return result;
     }
 
-    public static boolean isRepairableWith(ItemStack item, Block block2) {
-        Boolean result = isRepairableWith(item.getTypeId(), block2.getTypeId());
+    public static boolean isRepairableWith(ItemStack item, Block block) {
+        Boolean result = isRepairableWith(item.getTypeId(), block.getTypeId());
         if (result == null) {
-            tellOps(ChatColor.DARK_RED + "Someone just tried to see if this item was repairable with this block, but I don't know what this item is! The item has the I.D. "
-                    + item.getTypeId() + " and the block has the I.D. " + block2.getTypeId() + ". Is myPluginWiki up to date?", true);
+            mCL.err("Someone just tried to see if this item was repairable with this block, but I don't know what this item is! Is myCoreLibrary up to date?",
+                    "unidentified item", "item I.D.=" + item.getTypeId(), "block I.D.=" + block.getTypeId());
             return false;
         }
         return result;
@@ -1140,7 +1136,7 @@ public class WikiUtilities {
             return null;
         else if (id >= 256)
             return false;
-        for (int lockable : Wiki.LOCKABLE_SWITCH_IDS)
+        for (int lockable : LOCKABLE_SWITCH_IDS)
             if (lockable == id)
                 return true;
         return false;
